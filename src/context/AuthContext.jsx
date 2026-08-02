@@ -14,12 +14,30 @@ export function AuthProvider({ children }) {
     try {
       const me = await account.get()
       setUser(me)
+      let adminCheck = Boolean(me.labels?.includes('admin'))
       try {
-        const memberships = await teams.listMemberships(ADMIN_TEAM_ID)
-        setIsAdmin(memberships.memberships.some((m) => m.userId === me.$id && m.confirm))
+        const myTeams = await teams.list()
+        if (myTeams.teams?.some((t) => t.$id === ADMIN_TEAM_ID)) adminCheck = true
       } catch {
-        setIsAdmin(false)
+        // Fallback check
       }
+      if (!adminCheck) {
+        try {
+          const teamInfo = await teams.get(ADMIN_TEAM_ID)
+          if (teamInfo?.$id === ADMIN_TEAM_ID) adminCheck = true
+        } catch {
+          // Fallback check
+        }
+      }
+      if (!adminCheck) {
+        try {
+          const memberships = await teams.listMemberships(ADMIN_TEAM_ID)
+          adminCheck = memberships.memberships?.some((m) => m.userId === me.$id && m.confirm)
+        } catch {
+          adminCheck = false
+        }
+      }
+      setIsAdmin(adminCheck)
     } catch {
       setUser(null)
       setIsAdmin(false)
