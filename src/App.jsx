@@ -16,6 +16,7 @@ import AdminLabourers from './pages/admin/AdminLabourers'
 import AdminCategories from './pages/admin/AdminCategories'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminPayments from './pages/admin/AdminPayments'
+import AdminSettings from './pages/admin/AdminSettings'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="bookings" element={<AdminBookings />} />
             <Route path="payments" element={<AdminPayments />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

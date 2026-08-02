@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, Users, Tags, Wallet, ClipboardList } from 'lucide-react'
+import { LayoutDashboard, Users, Tags, Wallet, ClipboardList, IndianRupee } from 'lucide-react'
 
 const link = ({ isActive }) =>
   `flex items-center gap-2 rounded px-3 py-2 text-sm font-medium ${
@@ -17,6 +17,7 @@ export default function AdminLayout() {
           <NavLink to="/admin/categories" className={link}><Tags size={16} /> Categories</NavLink>
           <NavLink to="/admin/bookings" className={link}><ClipboardList size={16} /> Bookings</NavLink>
           <NavLink to="/admin/payments" className={link}><Wallet size={16} /> Revenue</NavLink>
+          <NavLink to="/admin/settings" className={link}><IndianRupee size={16} /> Pricing</NavLink>
         </nav>
         <div className="min-w-0">
           <Outlet />

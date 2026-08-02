@@ -47,10 +47,11 @@ export async function updateBookingStatus(id, status) {
   return databases.updateDocument(DATABASE_ID, COLLECTIONS.BOOKINGS, id, { status })
 }
 
-export async function setJobAmount(id, jobAmount, commissionAmount) {
+export async function setJobAmount(id, jobAmount, commissionAmount, commissionPaid = false) {
   return databases.updateDocument(DATABASE_ID, COLLECTIONS.BOOKINGS, id, {
     jobAmount,
     commissionAmount,
+    commissionPaid,
     status: BOOKING_STATUS.COMPLETED,
   })
 }

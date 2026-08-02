@@ -1,13 +1,8 @@
 import { Client, Databases, Permission, Role, ID } from 'node-appwrite'
 import Razorpay from 'razorpay'
 
-// Fixed platform prices. NEVER trust an amount sent from the browser —
-// always decide the amount here, on the server, so nobody can tamper
-// with the client to pay less than they should.
-const FIXED_PRICE = {
-  unlock: Number(process.env.PRICE_UNLOCK || 19),
-  listing: Number(process.env.PRICE_LISTING || 99),
-}
+const DB_ID = process.env.DATABASE_ID || 'labourconnect'
+const ADMIN_TEAM_ID = process.env.ADMIN_TEAM_ID || 'admins'
 
 export default async ({ req, res, log, error }) => {
   const userId = req.headers['x-appwrite-user-id']
@@ -30,24 +25,29 @@ export default async ({ req, res, log, error }) => {
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
     .setKey(process.env.APPWRITE_API_KEY)
   const databases = new Databases(client)
-  const dbId = process.env.DATABASE_ID || 'labourconnect'
 
   try {
     let amount
+
     if (type === 'commission') {
-      // Commission amount was already computed and stored by the
-      // labourer when they marked the booking complete — trust the DB,
-      // not the request.
-      const booking = await databases.getDocument(dbId, 'bookings', relatedId)
-      if (booking.clientUserId !== userId && booking.labourerId !== relatedId) {
-        // relatedId here is the booking id, ownership is checked via clientUserId
-      }
+      // Commission amount was already computed and stored by the labourer
+      // when they marked the booking complete — trust the DB, never the
+      // request body.
+      const booking = await databases.getDocument(DB_ID, 'bookings', relatedId)
       amount = booking.commissionAmount
       if (!amount || amount <= 0 || booking.commissionPaid) {
         return res.json({ error: 'Ye commission valid nahi hai ya pehle se paid hai' }, 400)
       }
     } else {
-      amount = FIXED_PRICE[type]
+      // unlock / listing — price comes LIVE from the database, which the
+      // admin panel edits. Nothing about price is hardcoded here, so the
+      // admin can change or switch off a fee any time without redeploying
+      // this function.
+      const settings = await databases.getDocument(DB_ID, 'settings', 'pricing')
+      amount = type === 'unlock' ? settings.unlockFee : settings.listingFee
+      if (!amount || amount <= 0) {
+        return res.json({ error: 'Ye feature abhi free hai, payment ki zarurat nahi' }, 400)
+      }
     }
 
     const razorpay = new Razorpay({
@@ -62,7 +62,7 @@ export default async ({ req, res, log, error }) => {
     })
 
     const paymentDoc = await databases.createDocument(
-      dbId,
+      DB_ID,
       'payments',
       ID.unique(),
       {
@@ -74,7 +74,7 @@ export default async ({ req, res, log, error }) => {
         razorpayPaymentId: '',
         status: 'created',
       },
-      [Permission.read(Role.user(userId)), Permission.read(Role.team(process.env.ADMIN_TEAM_ID || 'admins'))]
+      [Permission.read(Role.user(userId)), Permission.read(Role.team(ADMIN_TEAM_ID))]
     )
 
     return res.json({ orderId: order.id, amount: order.amount, paymentDocId: paymentDoc.$id })

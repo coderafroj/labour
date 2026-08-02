@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, IndianRupee, Loader2, CheckCircle2, Clock, HardHat, Phone, Home as HomeIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { getMyLabourerProfile, getMyPrivateInfo } from '../services/labourService'
+import { getMyLabourerProfile, getMyPrivateInfo, updateMyLabourerProfile } from '../services/labourService'
 import { myBookingsAsClient, myBookingsAsLabourer, setJobAmount, updateBookingStatus } from '../services/bookingService'
 import { myPayments, startPayment } from '../services/paymentService'
-import { PRICING, BOOKING_STATUS, LABOUR_STATUS } from '../lib/constants'
+import { getSettings } from '../services/settingsService'
+import { BOOKING_STATUS, LABOUR_STATUS } from '../lib/constants'
 import Loader from '../components/Loader'
 
 export default function Dashboard() {
@@ -40,26 +41,34 @@ function StatusPill({ status }) {
 function LabourerDashboard({ labourer, setLabourer, user }) {
   const [privateInfo, setPrivateInfo] = useState(null)
   const [bookings, setBookings] = useState([])
+  const [settings, setSettings] = useState(null)
   const [featuring, setFeaturing] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     getMyPrivateInfo(labourer.$id).then(setPrivateInfo).catch(() => {})
     myBookingsAsLabourer(labourer.$id).then(setBookings)
+    getSettings().then(setSettings)
   }, [labourer.$id])
 
   const handleFeature = async () => {
     setFeaturing(true)
     setError('')
     try {
-      await startPayment({
-        type: 'listing',
-        relatedId: labourer.$id,
-        amount: PRICING.FEATURED_LISTING_FEE,
-        user,
-        description: 'Featured listing',
-      })
-      // The verify-payment Function already flips `featured` server-side.
+      if (!settings.listingFee || settings.listingFee <= 0) {
+        // Admin has this fee switched off — feature it directly, free.
+        const featuredUntil = new Date(Date.now() + (settings.featuredDays || 30) * 86400000).toISOString()
+        await updateMyLabourerProfile(labourer.$id, { featured: true, featuredUntil })
+      } else {
+        await startPayment({
+          type: 'listing',
+          relatedId: labourer.$id,
+          amount: settings.listingFee,
+          user,
+          description: 'Featured listing',
+        })
+        // verify-razorpay-payment Function already set featured=true server-side.
+      }
       setLabourer((l) => ({ ...l, featured: true }))
     } catch (err) {
       setError(err.message)
@@ -76,9 +85,12 @@ function LabourerDashboard({ labourer, setLabourer, user }) {
   const handleComplete = async (id) => {
     const amount = Number(prompt('Final kaam ka amount (₹) daalo:'))
     if (!amount || amount <= 0) return
-    const commission = Math.max(PRICING.COMMISSION_MIN, Math.round((amount * PRICING.COMMISSION_PERCENT) / 100))
-    await setJobAmount(id, amount, commission)
-    setBookings((bs) => bs.map((b) => (b.$id === id ? { ...b, status: BOOKING_STATUS.COMPLETED, jobAmount: amount, commissionAmount: commission } : b)))
+    const percent = settings?.commissionPercent || 0
+    const min = settings?.commissionMin || 0
+    const commission = percent > 0 ? Math.max(min, Math.round((amount * percent) / 100)) : 0
+    const alreadyPaid = commission <= 0 // 0% commission = nothing to collect
+    await setJobAmount(id, amount, commission, alreadyPaid)
+    setBookings((bs) => bs.map((b) => (b.$id === id ? { ...b, status: BOOKING_STATUS.COMPLETED, jobAmount: amount, commissionAmount: commission, commissionPaid: alreadyPaid } : b)))
   }
 
   const handlePayCommission = async (booking) => {
@@ -130,11 +142,11 @@ function LabourerDashboard({ labourer, setLabourer, user }) {
           ) : (
             <button
               onClick={handleFeature}
-              disabled={featuring}
+              disabled={featuring || !settings}
               className="flex items-center gap-2 rounded bg-ink px-4 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-deep disabled:opacity-60"
             >
               {featuring ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
-              ₹{PRICING.FEATURED_LISTING_FEE} mein Featured Bano
+              {settings && settings.listingFee > 0 ? `₹${settings.listingFee} mein Featured Bano` : 'Free Mein Featured Bano'}
             </button>
           )}
           <Link to={`/labour/${labourer.$id}`} className="text-sm font-medium text-indigo underline">Apni public profile dekho</Link>

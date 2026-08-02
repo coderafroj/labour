@@ -1,6 +1,8 @@
 import { Client, Databases } from 'node-appwrite'
 import crypto from 'crypto'
 
+const DB_ID = process.env.DATABASE_ID || 'labourconnect'
+
 export default async ({ req, res, log, error }) => {
   const userId = req.headers['x-appwrite-user-id']
   if (!userId) return res.json({ error: 'Login required' }, 401)
@@ -33,25 +35,27 @@ export default async ({ req, res, log, error }) => {
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
     .setKey(process.env.APPWRITE_API_KEY)
   const databases = new Databases(client)
-  const dbId = process.env.DATABASE_ID || 'labourconnect'
 
   try {
-    const payment = await databases.getDocument(dbId, 'payments', paymentDocId)
+    const payment = await databases.getDocument(DB_ID, 'payments', paymentDocId)
     if (payment.userId !== userId) return res.json({ error: 'Ye payment aapka nahi hai' }, 403)
     if (payment.razorpayOrderId !== razorpay_order_id) return res.json({ error: 'Order mismatch' }, 400)
 
     if (payment.status === 'paid') return res.json({ ok: true }) // idempotent replay-safe
 
-    await databases.updateDocument(dbId, 'payments', paymentDocId, {
+    await databases.updateDocument(DB_ID, 'payments', paymentDocId, {
       status: 'paid',
       razorpayPaymentId: razorpay_payment_id,
     })
 
     if (payment.type === 'listing') {
-      const featuredUntil = new Date(Date.now() + Number(process.env.FEATURED_DAYS || 30) * 24 * 60 * 60 * 1000).toISOString()
-      await databases.updateDocument(dbId, 'labourers', payment.relatedId, { featured: true, featuredUntil })
+      // featuredDays also comes live from the database, so admin controls
+      // how long a "featured" boost lasts too.
+      const settings = await databases.getDocument(DB_ID, 'settings', 'pricing')
+      const featuredUntil = new Date(Date.now() + (settings.featuredDays || 30) * 24 * 60 * 60 * 1000).toISOString()
+      await databases.updateDocument(DB_ID, 'labourers', payment.relatedId, { featured: true, featuredUntil })
     } else if (payment.type === 'commission') {
-      await databases.updateDocument(dbId, 'bookings', payment.relatedId, { commissionPaid: true })
+      await databases.updateDocument(DB_ID, 'bookings', payment.relatedId, { commissionPaid: true })
     }
     // type === 'unlock' needs no extra write — get-labourer-contact checks
     // the `payments` collection directly for a paid record.

@@ -108,9 +108,10 @@ export async function adminSetVerified(id, verified) {
 }
 
 // ---- Paid contact reveal --------------------------------------------------
-// Calls the get-labourer-contact Appwrite Function, which checks (server
-// side, with an API key) whether the current user has a "paid" payment
-// record for this labourer before returning the real phone/address.
+// Calls the get-labourer-contact Appwrite Function, which decides — using
+// the LIVE price from the database, not anything sent from this browser —
+// whether the current user is allowed to see the real phone/address.
+// Returns { locked: false, phone, address } or { locked: true, fee }.
 export async function fetchUnlockedContact(labourerId) {
   const exec = await functions.createExecution(
     FUNCTIONS.GET_CONTACT,
@@ -118,8 +119,11 @@ export async function fetchUnlockedContact(labourerId) {
     false
   )
   const body = JSON.parse(exec.responseBody || '{}')
-  if (exec.responseStatusCode >= 400) {
-    throw new Error(body.error || 'Contact abhi unlock nahi hua')
+  if (exec.responseStatusCode === 402) {
+    return { locked: true, fee: body.fee ?? 0 }
   }
-  return body // { phone, address }
+  if (exec.responseStatusCode >= 400) {
+    throw new Error(body.error || 'Contact fetch nahi hua')
+  }
+  return { locked: false, phone: body.phone, address: body.address }
 }

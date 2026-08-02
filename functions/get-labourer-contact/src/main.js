@@ -1,5 +1,7 @@
 import { Client, Databases, Query } from 'node-appwrite'
 
+const DB_ID = process.env.DATABASE_ID || 'labourconnect'
+
 export default async ({ req, res, log, error }) => {
   const userId = req.headers['x-appwrite-user-id']
   if (!userId) return res.json({ error: 'Login required' }, 401)
@@ -18,15 +20,19 @@ export default async ({ req, res, log, error }) => {
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
     .setKey(process.env.APPWRITE_API_KEY)
   const databases = new Databases(client)
-  const dbId = process.env.DATABASE_ID || 'labourconnect'
 
   try {
-    // Owner of the profile can always see their own contact info.
-    const labourer = await databases.getDocument(dbId, 'labourers', labourerId)
+    const labourer = await databases.getDocument(DB_ID, 'labourers', labourerId)
     const isOwner = labourer.ownerUserId === userId
 
-    if (!isOwner) {
-      const paid = await databases.listDocuments(dbId, 'payments', [
+    const settings = await databases.getDocument(DB_ID, 'settings', 'pricing')
+    const unlockFee = settings.unlockFee || 0
+
+    // Owner always sees their own contact info. Also, if the admin has set
+    // the unlock fee to 0 (or hasn't turned it on yet), contact info is
+    // simply free for everyone — no payment record needed at all.
+    if (!isOwner && unlockFee > 0) {
+      const paid = await databases.listDocuments(DB_ID, 'payments', [
         Query.equal('userId', userId),
         Query.equal('relatedId', labourerId),
         Query.equal('type', 'unlock'),
@@ -36,18 +42,18 @@ export default async ({ req, res, log, error }) => {
       ])
 
       if (paid.documents.length === 0) {
-        return res.json({ error: 'Contact abhi unlock nahi hua' }, 402)
+        return res.json({ error: 'Contact abhi unlock nahi hua', fee: unlockFee }, 402)
       }
 
-      const validDays = Number(process.env.UNLOCK_VALID_DAYS || 30)
+      const validDays = settings.unlockValidDays || 30
       const paidAt = new Date(paid.documents[0].$createdAt).getTime()
       const daysSince = (Date.now() - paidAt) / (1000 * 60 * 60 * 24)
       if (daysSince > validDays) {
-        return res.json({ error: 'Unlock expire ho gaya, dobara pay karein' }, 402)
+        return res.json({ error: 'Unlock expire ho gaya, dobara pay karein', fee: unlockFee }, 402)
       }
     }
 
-    const priv = await databases.getDocument(dbId, 'labourer_private', labourerId)
+    const priv = await databases.getDocument(DB_ID, 'labourer_private', labourerId)
     return res.json({ phone: priv.phone, address: priv.address })
   } catch (err) {
     error(err.message)

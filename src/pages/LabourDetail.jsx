@@ -5,7 +5,6 @@ import { getLabourer, fetchUnlockedContact } from '../services/labourService'
 import { startPayment } from '../services/paymentService'
 import { createBooking } from '../services/bookingService'
 import { useAuth } from '../context/AuthContext'
-import { PRICING } from '../lib/constants'
 import Loader from '../components/Loader'
 
 export default function LabourDetail() {
@@ -15,6 +14,7 @@ export default function LabourDetail() {
 
   const [labourer, setLabourer] = useState(null)
   const [contact, setContact] = useState(null)
+  const [unlockFee, setUnlockFee] = useState(null) // live price from the server, not hardcoded
   const [loading, setLoading] = useState(true)
   const [unlocking, setUnlocking] = useState(false)
   const [error, setError] = useState('')
@@ -27,12 +27,9 @@ export default function LabourDetail() {
         const doc = await getLabourer(id)
         setLabourer(doc)
         if (user) {
-          try {
-            const c = await fetchUnlockedContact(id)
-            setContact(c)
-          } catch {
-            setContact(null)
-          }
+          const result = await fetchUnlockedContact(id)
+          if (result.locked) setUnlockFee(result.fee)
+          else setContact(result)
         }
       } catch {
         setError('Ye profile nahi mili')
@@ -50,12 +47,12 @@ export default function LabourDetail() {
       await startPayment({
         type: 'unlock',
         relatedId: id,
-        amount: PRICING.CONTACT_UNLOCK_FEE,
+        amount: unlockFee,
         user,
         description: `${labourer.name} ka number unlock`,
       })
-      const c = await fetchUnlockedContact(id)
-      setContact(c)
+      const result = await fetchUnlockedContact(id)
+      if (!result.locked) setContact(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -134,6 +131,19 @@ export default function LabourDetail() {
                 <HomeIcon size={15} className="text-verified" /> {contact.address}
               </p>
             </div>
+          ) : !user ? (
+            <div className="mt-3 flex flex-col items-start gap-3 rounded-md border border-dashed border-paper-line bg-paper p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <Lock size={22} className="text-steel" />
+                <div>
+                  <p className="font-mono text-lg font-semibold tracking-widest text-steel">{labourer.phoneMasked}</p>
+                  <p className="text-xs text-steel">Number dekhne ke liye pehle login karo</p>
+                </div>
+              </div>
+              <button onClick={() => navigate('/login', { state: { from: `/labour/${id}` } })} className="rounded bg-signal px-5 py-2.5 text-sm font-semibold text-ink hover:bg-signal-deep">
+                Login Karo
+              </button>
+            </div>
           ) : (
             <div className="mt-3 flex flex-col items-start gap-3 rounded-md border border-dashed border-paper-line bg-paper p-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
@@ -149,7 +159,7 @@ export default function LabourDetail() {
                 className="flex items-center gap-2 rounded bg-signal px-5 py-2.5 text-sm font-semibold text-ink hover:bg-signal-deep disabled:opacity-60"
               >
                 {unlocking ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
-                ₹{PRICING.CONTACT_UNLOCK_FEE} mein Unlock Karo
+                ₹{unlockFee} mein Unlock Karo
               </button>
             </div>
           )}

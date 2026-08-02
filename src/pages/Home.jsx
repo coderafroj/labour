@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, ShieldCheck, PhoneCall, ArrowRight, User } from 'lucide-react'
 import { listCategories } from '../services/categoryService'
 import { browseLabourers } from '../services/labourService'
+import { getSettings } from '../services/settingsService'
 import CategoryIcon from '../components/CategoryIcon'
 import LabourCard from '../components/LabourCard'
 import Loader from '../components/Loader'
@@ -16,6 +17,7 @@ const STEPS = [
 export default function Home() {
   const [categories, setCategories] = useState([])
   const [featured, setFeatured] = useState([])
+  const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
   const [city, setCity] = useState('')
   const [categorySlug, setCategorySlug] = useState('')
@@ -24,12 +26,14 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        const [cats, labourers] = await Promise.all([
+        const [cats, labourers, s] = await Promise.all([
           listCategories(),
           browseLabourers({ limit: 6 }),
+          getSettings(),
         ])
         setCategories(cats)
         setFeatured(labourers.documents)
+        setSettings(s)
       } finally {
         setLoading(false)
       }
@@ -82,7 +86,9 @@ export default function Home() {
                 <Search size={16} /> Dhundo
               </button>
             </form>
-            <p className="mt-3 font-mono text-xs text-steel">Free hai — sirf number dekhne ka ₹19 lagta hai.</p>
+            <p className="mt-3 font-mono text-xs text-steel">
+              {settings && settings.unlockFee > 0 ? `Free hai — sirf number dekhne ka ₹${settings.unlockFee} lagta hai.` : 'Abhi bilkul free hai — number dekhne ka bhi koi charge nahi.'}
+            </p>
           </div>
 
           {/* Fanned ID badge stack */}

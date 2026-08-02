@@ -60,12 +60,13 @@ async function ignoreExists(promise, label) {
 }
 
 async function waitForAttribute(collectionId, key) {
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 60; i++) {
     const attrs = await databases.listAttributes(DATABASE_ID, collectionId)
     const attr = attrs.attributes.find((a) => a.key === key)
     if (attr && attr.status === 'available') return
     await sleep(500)
   }
+  console.log(`  · warning: attribute ${key} in ${collectionId} still processing after 30s`)
 }
 
 async function main() {
@@ -194,6 +195,45 @@ async function main() {
   await ignoreExists(databases.createIndex(DATABASE_ID, 'payments', 'user_idx', 'key', ['userId']), 'index: userId')
   await ignoreExists(databases.createIndex(DATABASE_ID, 'payments', 'related_idx', 'key', ['relatedId']), 'index: relatedId')
 
+  // ============================ settings (live, admin-editable pricing) ============================
+  // Singleton document, id "pricing". Admin -> Pricing edits this directly.
+  // Every fee starts at 0 so the platform launches fully free — you turn
+  // charges on later from the admin panel, no code change needed.
+  console.log('\n📁 Collection: settings')
+  await ignoreExists(
+    databases.createCollection(DATABASE_ID, 'settings', 'settings', [
+      Permission.read(Role.any()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+    ], true),
+    'Create collection'
+  )
+  await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'unlockFee', false), 'attr: unlockFee')
+  await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'unlockValidDays', false), 'attr: unlockValidDays')
+  await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'listingFee', false), 'attr: listingFee')
+  await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'featuredDays', false), 'attr: featuredDays')
+  await ignoreExists(databases.createFloatAttribute(DATABASE_ID, 'settings', 'commissionPercent', false), 'attr: commissionPercent')
+  await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'commissionMin', false), 'attr: commissionMin')
+  await waitForAttribute('settings', 'unlockFee')
+  await waitForAttribute('settings', 'unlockValidDays')
+  await waitForAttribute('settings', 'listingFee')
+  await waitForAttribute('settings', 'featuredDays')
+  await waitForAttribute('settings', 'commissionPercent')
+  await waitForAttribute('settings', 'commissionMin')
+  try {
+    await databases.getDocument(DATABASE_ID, 'settings', 'pricing')
+    console.log('  · pricing document (already exists, skipped)')
+  } catch {
+    await databases.createDocument(DATABASE_ID, 'settings', 'pricing', {
+      unlockFee: 0,
+      unlockValidDays: 30,
+      listingFee: 0,
+      featuredDays: 30,
+      commissionPercent: 0,
+      commissionMin: 0,
+    }, [Permission.read(Role.any()), Permission.update(Role.team(ADMIN_TEAM_ID))])
+    console.log('  ✓ pricing document (all fees start at 0 / free)')
+  }
+
   // ============================ seed categories ============================
   console.log('\n🌱 Seeding starter categories')
   const DEFAULT_CATEGORIES = [
@@ -227,7 +267,8 @@ async function main() {
   console.log('\n✅ Done! Ab README.md ke "Next steps" section follow karein:')
   console.log('   1. Apna user account banayein aap ke app se (signup)')
   console.log(`   2. Us user ko Appwrite console me "${ADMIN_TEAM_ID}" team me add karein (make it Owner/confirmed)`)
-  console.log('   3. Teeno Appwrite Functions deploy karein (functions/ folder dekhen)\n')
+  console.log('   3. Teeno Appwrite Functions deploy karein (functions/ folder dekhen)')
+  console.log('   4. Login karke /admin/settings se apni pricing set karein — sab abhi 0 (free) par set hai\n')
 }
 
 main().catch((err) => {

@@ -7,18 +7,25 @@ haath ka kaam.
 
 ## Kamai kaise hoti hai (business model)
 
-Teeno tareeke ek saath, sab `src/lib/constants.js` ke `PRICING` object mein
-control hote hain:
+Teeno tareeke ek saath supported hain, aur ye ab **hardcoded nahi hain** —
+saari pricing ek `settings` collection (document id `pricing`) mein live
+rehti hai aur **Admin -> Pricing** page se kabhi bhi badli ja sakti hai,
+bina code chhue, bina kuch redeploy kiye:
 
-| Tareeka | Kaun deta hai | Kitna | Kab |
+| Tareeka | Kaun deta hai | Field | Default |
 |---|---|---|---|
-| **Contact Unlock** | Client | Rs 19 | Jab kisi kaamgaar ka number/address dekhna ho (30 din tak valid) |
-| **Featured Listing** | Kaamgaar | Rs 99 | Apni category mein 30 din tak sabse upar dikhne ke liye |
-| **Booking Commission** | Kaamgaar | 8% (min Rs 10) | Jab booking complete ho aur final amount tay ho |
+| **Contact Unlock** | Client | `unlockFee` | ₹0 (off) |
+| **Featured Listing** | Kaamgaar | `listingFee` | ₹0 (off) |
+| **Booking Commission** | Kaamgaar | `commissionPercent` / `commissionMin` | 0% (off) |
 
-Ye teeno numbers `PRICING` object se change kar sakte ho — code mein kahin
-aur hardcoded nahi hain (Appwrite Function mein bhi environment variable se
-aate hain).
+**Sab kuch ₹0 se shuru hota hai** — app pehle din se fully free chalta hai.
+Jab chaho, `/admin/settings` khol kar koi bhi number badal do — teeno
+Appwrite Functions har request par ye value seedha database se padhte hain,
+isliye change turant live ho jaata hai.
+
+Agar koi fee 0 hai, to us step ke liye Razorpay bulaya hi nahi jaata — jaise
+`unlockFee = 0` par contact seedha free mein dikh jaata hai, `listingFee = 0`
+par "Featured Bano" button seedha free mein feature kar deta hai.
 
 ## Kyun secure hai — important design decision
 
@@ -110,8 +117,10 @@ Sirf `create-razorpay-order` aur `verify-razorpay-payment` ko ye extra chahiye:
 |---|---|
 | `RAZORPAY_KEY_ID` | Razorpay dashboard se (Test ya Live) |
 | `RAZORPAY_KEY_SECRET` | Razorpay dashboard se — **kabhi frontend mein mat daalna** |
-| `PRICE_UNLOCK` | `19` |
-| `PRICE_LISTING` | `99` |
+
+(Pricing ab yahan nahi hai — Functions har request par `settings/pricing`
+document seedha database se padhte hain, jo `/admin/settings` se control
+hota hai.)
 
 Har Function ki **Execute Access** permission mein `users` role add karna na
 bhoolein (Function Settings -> Permissions) — isi se logged-in client
@@ -141,6 +150,8 @@ npm run dev
    **Teams -> admins -> Add Member** se apna email daal kar add karo,
    membership ko "confirmed" karo.
 3. Ab login karne par Navbar mein **Admin** button dikhega, `/admin` khul jayega.
+4. `/admin/settings` (Pricing) par jaake apni fees set karo — jab tak yahan
+   kuch nahi badloge, poora platform free rahega.
 
 ---
 
@@ -173,4 +184,3 @@ host ke environment settings mein daal do.
 - Labourer ke liye Aadhar-based verification badge
 - Reviews/rating system jab booking complete ho
 - Push notifications naye booking requests ke liye
-# labour
