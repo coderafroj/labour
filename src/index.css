@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --color-paper: #EEF0EE;
+  --color-paper-line: #DADDD6;
+  --color-ink: #101E2B;
+  --color-indigo: #1F3A5F;
+  --color-indigo-deep: #142A45;
+  --color-signal: #F2B705;
+  --color-signal-deep: #C99400;
+  --color-rust: #B3562B;
+  --color-verified: #1F7A4D;
+  --color-verified-bg: #E4F1E9;
+  --color-steel: #5B6572;
+  --color-danger: #B5342A;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  background-image:
+    linear-gradient(var(--color-paper-line) 1px, transparent 1px);
+  background-size: 100% 32px;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-ink);
+}
+
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+/* Punch-hole ID badge look */
+.badge-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #E1E4DF;
+  box-shadow: 0 1px 0 rgba(16,30,43,0.04), 0 10px 24px -14px rgba(16,30,43,0.35);
+}
+.badge-punch {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 1px solid #D8DBD4;
+}
+
+.stamp {
+  transform: rotate(-8deg);
+  border: 2px dashed var(--color-verified);
+  color: var(--color-verified);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
