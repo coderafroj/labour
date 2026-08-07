@@ -4,7 +4,7 @@ import { MapPin, Star, BadgeCheck, User, Lock, Phone, Home as HomeIcon, Loader2,
 import { getLabourer, fetchUnlockedContact } from '../services/labourService'
 import { startPayment } from '../services/paymentService'
 import { createBooking } from '../services/bookingService'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import Loader from '../components/Loader'
 
 export default function LabourDetail() {

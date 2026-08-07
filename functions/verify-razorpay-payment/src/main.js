@@ -3,7 +3,7 @@ import crypto from 'crypto'
 
 const DB_ID = process.env.DATABASE_ID || 'labourconnect'
 
-export default async ({ req, res, log, error }) => {
+export default async ({ req, res, log: _log, error }) => {
   const userId = req.headers['x-appwrite-user-id']
   if (!userId) return res.json({ error: 'Login required' }, 401)
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, IndianRupee, Loader2, CheckCircle2, Clock, HardHat, Phone, Home as HomeIcon } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { getMyLabourerProfile, getMyPrivateInfo, updateMyLabourerProfile } from '../services/labourService'
 import { myBookingsAsClient, myBookingsAsLabourer, setJobAmount, updateBookingStatus } from '../services/bookingService'
 import { myPayments, startPayment } from '../services/paymentService'

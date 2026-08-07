@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { account, teams, ID } from '../lib/appwrite'
 import { ADMIN_TEAM_ID } from '../lib/constants'
-
-const AuthContext = createContext(null)
+import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -12,27 +11,19 @@ export function AuthProvider({ children }) {
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const me = await account.get()
+      const me = await account.get().catch(() => null)
+      if (!me) {
+        setUser(null)
+        setIsAdmin(false)
+        return
+      }
       setUser(me)
+
       let adminCheck = Boolean(me.labels?.includes('admin'))
-      try {
-        const myTeams = await teams.list()
-        if (myTeams.teams?.some((t) => t.$id === ADMIN_TEAM_ID)) adminCheck = true
-      } catch {
-        // Fallback check
-      }
       if (!adminCheck) {
         try {
-          const teamInfo = await teams.get(ADMIN_TEAM_ID)
-          if (teamInfo?.$id === ADMIN_TEAM_ID) adminCheck = true
-        } catch {
-          // Fallback check
-        }
-      }
-      if (!adminCheck) {
-        try {
-          const memberships = await teams.listMemberships(ADMIN_TEAM_ID)
-          adminCheck = memberships.memberships?.some((m) => m.userId === me.$id && m.confirm)
+          const myTeams = await teams.list()
+          adminCheck = Boolean(myTeams.teams?.some((t) => t.$id === ADMIN_TEAM_ID))
         } catch {
           adminCheck = false
         }
@@ -61,7 +52,11 @@ export function AuthProvider({ children }) {
   }
 
   const logout = async () => {
-    await account.deleteSession('current')
+    try {
+      await account.deleteSession('current')
+    } catch {
+      // Ignore if session is already deleted
+    }
     setUser(null)
     setIsAdmin(false)
   }
@@ -71,10 +66,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
-  return ctx
 }

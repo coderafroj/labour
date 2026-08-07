@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { HardHat, Loader2, ImagePlus } from 'lucide-react'
 import { listCategories } from '../services/categoryService'
 import { registerLabourer, uploadPhoto, getMyLabourerProfile } from '../services/labourService'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import Loader from '../components/Loader'
 
 export default function RegisterLabour() {

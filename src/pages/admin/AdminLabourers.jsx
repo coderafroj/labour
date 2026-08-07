@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Check, X, BadgeCheck, Loader2 } from 'lucide-react'
 import { adminListAllLabourers, adminSetStatus, adminSetVerified, registerLabourer } from '../../services/labourService'
 import { listCategories } from '../../services/categoryService'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
 import { LABOUR_STATUS } from '../../lib/constants'
 import Loader from '../../components/Loader'
 

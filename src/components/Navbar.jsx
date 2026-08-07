@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { HardHat, Menu, X, LogOut, LayoutDashboard } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 const navLink = ({ isActive }) =>
   `px-3 py-2 text-sm font-medium transition-colors ${
