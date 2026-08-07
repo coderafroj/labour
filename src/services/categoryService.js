@@ -1,5 +1,5 @@
 import { databases, ID, Query, Permission, Role } from '../lib/appwrite'
-import { DATABASE_ID, COLLECTIONS, ADMIN_TEAM_ID } from '../lib/constants'
+import { DATABASE_ID, COLLECTIONS } from '../lib/constants'
 
 export async function listCategories() {
   const res = await databases.listDocuments(DATABASE_ID, COLLECTIONS.CATEGORIES, [
@@ -12,8 +12,6 @@ export async function listCategories() {
 export async function createCategory(data) {
   return databases.createDocument(DATABASE_ID, COLLECTIONS.CATEGORIES, ID.unique(), data, [
     Permission.read(Role.any()),
-    Permission.update(Role.team(ADMIN_TEAM_ID)),
-    Permission.delete(Role.team(ADMIN_TEAM_ID)),
   ])
 }
 

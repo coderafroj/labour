@@ -1,5 +1,5 @@
 import { databases, ID, Query, Permission, Role } from '../lib/appwrite'
-import { DATABASE_ID, COLLECTIONS, ADMIN_TEAM_ID, BOOKING_STATUS } from '../lib/constants'
+import { DATABASE_ID, COLLECTIONS, BOOKING_STATUS } from '../lib/constants'
 
 export async function createBooking({ clientUserId, labourerId, labourerOwnerId, message, city }) {
   return databases.createDocument(
@@ -19,10 +19,8 @@ export async function createBooking({ clientUserId, labourerId, labourerOwnerId,
     [
       Permission.read(Role.user(clientUserId)),
       Permission.read(Role.user(labourerOwnerId)),
-      Permission.read(Role.team(ADMIN_TEAM_ID)),
       Permission.update(Role.user(clientUserId)),
       Permission.update(Role.user(labourerOwnerId)),
-      Permission.update(Role.team(ADMIN_TEAM_ID)),
     ]
   )
 }

@@ -1,5 +1,5 @@
 import { databases, storage, functions, ID, Query, Permission, Role } from '../lib/appwrite'
-import { DATABASE_ID, COLLECTIONS, ADMIN_TEAM_ID, BUCKET_ID, FUNCTIONS, LABOUR_STATUS } from '../lib/constants'
+import { DATABASE_ID, COLLECTIONS, BUCKET_ID, FUNCTIONS, LABOUR_STATUS } from '../lib/constants'
 
 function maskPhone(phone) {
   const digits = String(phone).replace(/\D/g, '')
@@ -41,8 +41,7 @@ export async function registerLabourer({ ownerUserId, name, phone, address, city
     [
       Permission.read(Role.any()),
       Permission.update(Role.user(ownerUserId)),
-      Permission.update(Role.team(ADMIN_TEAM_ID)),
-      Permission.delete(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.user(ownerUserId)),
     ]
   )
 
@@ -53,9 +52,8 @@ export async function registerLabourer({ ownerUserId, name, phone, address, city
     { phone: String(phone || '').trim(), address: String(address || '').trim(), pincode: '' },
     [
       Permission.read(Role.user(ownerUserId)),
-      Permission.read(Role.team(ADMIN_TEAM_ID)),
       Permission.update(Role.user(ownerUserId)),
-      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.user(ownerUserId)),
     ]
   )
 
