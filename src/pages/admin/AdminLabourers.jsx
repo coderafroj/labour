@@ -20,27 +20,47 @@ export default function AdminLabourers() {
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [categories, setCategories] = useState([])
+  const [actionError, setActionError] = useState('')
 
   const load = () => {
     setLoading(true)
-    adminListAllLabourers({ status: tab || undefined, limit: 100 }).then((res) => setList(res.documents)).finally(() => setLoading(false))
+    setActionError('')
+    adminListAllLabourers({ status: tab || undefined, limit: 100 })
+      .then((res) => setList(res.documents))
+      .catch((err) => setActionError('Labourers list load nahi hui: ' + err.message))
+      .finally(() => setLoading(false))
   }
 
   useEffect(load, [tab])
-  useEffect(() => { listCategories().then(setCategories) }, [])
+  useEffect(() => { listCategories().then(setCategories).catch(() => {}) }, [])
 
   const setStatus = async (id, status) => {
-    await adminSetStatus(id, status)
-    setList((l) => l.map((x) => (x.$id === id ? { ...x, status } : x)))
+    setActionError('')
+    try {
+      await adminSetStatus(id, status)
+      setList((l) => l.map((x) => (x.$id === id ? { ...x, status } : x)))
+    } catch (err) {
+      setActionError('Status update fail hua: ' + err.message + '. Ensure backend setup was run: npm run setup:appwrite')
+    }
   }
 
   const toggleVerified = async (id, verified) => {
-    await adminSetVerified(id, !verified)
-    setList((l) => l.map((x) => (x.$id === id ? { ...x, verified: !verified } : x)))
+    setActionError('')
+    try {
+      await adminSetVerified(id, !verified)
+      setList((l) => l.map((x) => (x.$id === id ? { ...x, verified: !verified } : x)))
+    } catch (err) {
+      setActionError('Verification status update fail hua: ' + err.message)
+    }
   }
 
   return (
     <div>
+      {actionError && (
+        <div className="mb-4 rounded-md border border-danger bg-danger/10 p-3 text-xs font-semibold text-danger">
+          {actionError}
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1 overflow-x-auto rounded-md border border-paper-line bg-white p-1">
           {TABS.map((t) => (

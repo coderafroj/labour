@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Star, BadgeCheck, User } from 'lucide-react'
+import { MapPin, Star, BadgeCheck, User, Navigation } from 'lucide-react'
 import CategoryIcon from './CategoryIcon'
+import { calculateDistance } from '../services/labourService'
 
-export default function LabourCard({ labourer, categoryIcon = 'HardHat' }) {
+export default function LabourCard({ labourer, categoryIcon = 'HardHat', userCoords }) {
+  const dist = userCoords && labourer.lat != null && labourer.lng != null
+    ? calculateDistance(userCoords.lat, userCoords.lng, labourer.lat, labourer.lng)
+    : null
+
   return (
     <Link
       to={`/labour/${labourer.$id}`}
@@ -33,9 +38,14 @@ export default function LabourCard({ labourer, categoryIcon = 'HardHat' }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-2 px-4 py-3">
-        <p className="flex items-center gap-1.5 text-sm text-steel">
-          <MapPin size={14} /> {labourer.city}
-        </p>
+        <div className="flex items-center justify-between text-sm text-steel">
+          <span className="flex items-center gap-1.5"><MapPin size={14} /> {labourer.city}</span>
+          {dist !== null && (
+            <span className="flex items-center gap-1 rounded bg-rust/10 px-2 py-0.5 font-mono text-xs font-semibold text-rust">
+              <Navigation size={11} /> {dist} km door
+            </span>
+          )}
+        </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-steel">{labourer.experienceYears}+ saal ka anubhav</span>
           {labourer.rating > 0 && (

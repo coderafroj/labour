@@ -7,16 +7,18 @@ export async function getSettings() {
   try {
     const doc = await databases.getDocument(DATABASE_ID, COLLECTIONS.SETTINGS, SETTINGS_DOC_ID)
     return {
-      unlockFee: doc.unlockFee,
-      unlockValidDays: doc.unlockValidDays,
-      listingFee: doc.listingFee,
-      featuredDays: doc.featuredDays,
-      commissionPercent: doc.commissionPercent,
-      commissionMin: doc.commissionMin,
+      unlockFee: doc.unlockFee ?? PRICING.CONTACT_UNLOCK_FEE,
+      unlockValidDays: doc.unlockValidDays ?? PRICING.UNLOCK_VALID_DAYS,
+      listingFee: doc.listingFee ?? PRICING.FEATURED_LISTING_FEE,
+      featuredDays: doc.featuredDays ?? PRICING.FEATURED_DAYS,
+      commissionPercent: doc.commissionPercent ?? PRICING.COMMISSION_PERCENT,
+      commissionMin: doc.commissionMin ?? PRICING.COMMISSION_MIN,
+      announcementText: doc.announcementText || '',
+      maintenanceMode: Boolean(doc.maintenanceMode),
+      supportPhone: doc.supportPhone || '',
+      supportEmail: doc.supportEmail || '',
     }
   } catch {
-    // Settings doc missing (e.g. setup script not run yet) — fall back to
-    // the zero-fee defaults so the app never hard-crashes.
     return {
       unlockFee: PRICING.CONTACT_UNLOCK_FEE,
       unlockValidDays: PRICING.UNLOCK_VALID_DAYS,
@@ -24,6 +26,10 @@ export async function getSettings() {
       featuredDays: PRICING.FEATURED_DAYS,
       commissionPercent: PRICING.COMMISSION_PERCENT,
       commissionMin: PRICING.COMMISSION_MIN,
+      announcementText: '',
+      maintenanceMode: false,
+      supportPhone: '',
+      supportEmail: '',
     }
   }
 }

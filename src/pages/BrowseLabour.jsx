@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, SearchX } from 'lucide-react'
+import { Search, SearchX, MapPin, Loader2 } from 'lucide-react'
 import { listCategories } from '../services/categoryService'
-import { browseLabourers } from '../services/labourService'
+import { browseLabourers, calculateDistance } from '../services/labourService'
 import LabourCard from '../components/LabourCard'
 import Loader from '../components/Loader'
 
@@ -15,6 +15,10 @@ export default function BrowseLabour() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
+  const [userCoords, setUserCoords] = useState(null)
+  const [nearMeActive, setNearMeActive] = useState(false)
+  const [gettingLoc, setGettingLoc] = useState(false)
+  const [locError, setLocError] = useState('')
 
   const categorySlug = params.get('category') || ''
   const city = params.get('city') || ''
@@ -34,6 +38,40 @@ export default function BrowseLabour() {
       })
       .finally(() => setLoading(false))
   }, [categorySlug, city, search])
+
+  const handleToggleNearMe = () => {
+    if (nearMeActive) {
+      setNearMeActive(false)
+      return
+    }
+    if (!navigator.geolocation) {
+      setLocError('GPS Geolocation browser dwara supported nahi hai.')
+      return
+    }
+    setGettingLoc(true)
+    setLocError('')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        setNearMeActive(true)
+        setGettingLoc(false)
+      },
+      (err) => {
+        setLocError('Location permission deny hui: ' + err.message)
+        setGettingLoc(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const sortedLabourers = useMemo(() => {
+    if (!nearMeActive || !userCoords) return labourers
+    return [...labourers].sort((a, b) => {
+      const distA = calculateDistance(userCoords.lat, userCoords.lng, a.lat, a.lng) ?? 999999
+      const distB = calculateDistance(userCoords.lat, userCoords.lng, b.lat, b.lng) ?? 999999
+      return distA - distB
+    })
+  }, [labourers, nearMeActive, userCoords])
 
   const loadMore = async () => {
     const next = page + 1
@@ -55,8 +93,24 @@ export default function BrowseLabour() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="font-display text-4xl font-bold text-ink">Kaam Wale Dhundo</h1>
-      <p className="mt-1 text-sm text-steel">{total} verified kaamgaar milte hain LabourConnect par</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-4xl font-bold text-ink">Kaam Wale Dhundo</h1>
+          <p className="mt-1 text-sm text-steel">{total} verified kaamgaar milte hain LabourConnect par</p>
+        </div>
+        <button
+          onClick={handleToggleNearMe}
+          disabled={gettingLoc}
+          className={`flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold transition-colors ${
+            nearMeActive ? 'bg-rust text-paper' : 'border border-paper-line bg-paper text-ink hover:border-ink'
+          }`}
+        >
+          {gettingLoc ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
+          {nearMeActive ? '📍 Near Me Active (Pass Wale Top Pe)' : '📍 Pass Ke Kaamgaar (Near Me)'}
+        </button>
+      </div>
+
+      {locError && <p className="mt-2 text-xs text-danger">{locError}</p>}
 
       <div className="badge-card mt-6 flex flex-col gap-3 rounded-md p-4 sm:flex-row">
         <select
@@ -95,8 +149,8 @@ export default function BrowseLabour() {
       ) : (
         <>
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {labourers.map((l) => (
-              <LabourCard key={l.$id} labourer={l} categoryIcon={categoryIconFor(l.categorySlug)} />
+            {sortedLabourers.map((l) => (
+              <LabourCard key={l.$id} labourer={l} categoryIcon={categoryIconFor(l.categorySlug)} userCoords={userCoords} />
             ))}
           </div>
           {labourers.length < total && (

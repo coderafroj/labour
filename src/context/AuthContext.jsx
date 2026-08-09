@@ -8,8 +8,8 @@ export function AuthProvider({ children }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const refresh = useCallback(async () => {
-    setLoading(true)
+  const refresh = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true)
     try {
       const me = await account.get().catch(() => null)
       if (!me) {
@@ -38,12 +38,20 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    refresh()
+    refresh(true)
   }, [refresh])
 
   const login = async (email, password) => {
     await account.createEmailPasswordSession(email, password)
     await refresh()
+  }
+
+  const loginWithGoogle = () => {
+    account.createOAuth2Session(
+      'google',
+      `${window.location.origin}/dashboard`,
+      `${window.location.origin}/login`
+    )
   }
 
   const signup = async (name, email, password) => {
@@ -62,7 +70,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, login, signup, logout, refresh }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, login, loginWithGoogle, signup, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )

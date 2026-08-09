@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HardHat, Loader2, ImagePlus } from 'lucide-react'
+import { HardHat, Loader2, ImagePlus, MapPin, CheckCircle2 } from 'lucide-react'
 import { listCategories } from '../services/categoryService'
 import { registerLabourer, uploadPhoto, getMyLabourerProfile } from '../services/labourService'
 import { useAuth } from '../hooks/useAuth'
@@ -12,6 +12,8 @@ export default function RegisterLabour() {
   const [categories, setCategories] = useState([])
   const [checking, setChecking] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [detectingLoc, setDetectingLoc] = useState(false)
+  const [locationCoords, setLocationCoords] = useState(null)
   const [error, setError] = useState('')
   const [photoFile, setPhotoFile] = useState(null)
   const [form, setForm] = useState({
@@ -34,6 +36,29 @@ export default function RegisterLabour() {
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
 
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Aapke browser mein GPS Geolocation support nahi hai.')
+      return
+    }
+    setDetectingLoc(true)
+    setError('')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocationCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        })
+        setDetectingLoc(false)
+      },
+      (err) => {
+        setError('Location detect nahi ho paya. Permission allow karein ya sheher ka naam manual daalein: ' + err.message)
+        setDetectingLoc(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!user) return navigate('/login', { state: { from: '/register-labour' } })
@@ -55,6 +80,8 @@ export default function RegisterLabour() {
         dailyRate: form.dailyRate,
         bio: form.bio,
         photoUrl,
+        lat: locationCoords?.lat,
+        lng: locationCoords?.lng,
       })
       navigate('/dashboard')
     } catch (err) {
@@ -92,7 +119,7 @@ export default function RegisterLabour() {
           <textarea required value={form.address} onChange={update('address')} className="input min-h-20" placeholder="Ghar/dukaan ka pura pata" />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Sheher"><input required value={form.city} onChange={update('city')} className="input" /></Field>
+          <Field label="Sheher"><input required value={form.city} onChange={update('city')} className="input" placeholder="e.g. Delhi, Lucknow, Patna" /></Field>
           <Field label="Category">
             <select required value={form.categorySlug} onChange={update('categorySlug')} className="input">
               <option value="">Chuno</option>
@@ -100,6 +127,26 @@ export default function RegisterLabour() {
             </select>
           </Field>
         </div>
+
+        <Field label="GPS Geolocation (Pass Ke Clients Ke Liye)">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleDetectLocation}
+              disabled={detectingLoc}
+              className="flex items-center gap-1.5 rounded border border-paper-line bg-paper px-3 py-2 text-xs font-semibold text-ink hover:border-ink disabled:opacity-60"
+            >
+              {detectingLoc ? <Loader2 size={14} className="animate-spin text-steel" /> : <MapPin size={14} className="text-rust" />}
+              {locationCoords ? 'Location Update Karo' : '📍 Meri GPS Location Add Karo'}
+            </button>
+            {locationCoords && (
+              <span className="flex items-center gap-1 text-xs font-semibold text-verified">
+                <CheckCircle2 size={14} /> Location Added ({locationCoords.lat.toFixed(4)}, {locationCoords.lng.toFixed(4)})
+              </span>
+            )}
+          </div>
+        </Field>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Anubhav (saal)"><input required type="number" min="0" value={form.experienceYears} onChange={update('experienceYears')} className="input" /></Field>
           <Field label="Rate (₹ per din)"><input required type="number" min="0" value={form.dailyRate} onChange={update('dailyRate')} className="input" /></Field>

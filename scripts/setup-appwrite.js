@@ -107,10 +107,22 @@ async function main() {
   console.log('\n📁 Collection: labourers')
   await ignoreExists(
     databases.createCollection(DATABASE_ID, 'labourers', 'labourers', [
+      Permission.read(Role.any()),
       Permission.create(Role.users()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.team(ADMIN_TEAM_ID)),
     ], true),
     'Create collection'
   )
+  try {
+    await databases.updateCollection(DATABASE_ID, 'labourers', 'labourers', [
+      Permission.read(Role.any()),
+      Permission.create(Role.users()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.team(ADMIN_TEAM_ID)),
+    ], true)
+  } catch {}
+
   const labourerAttrs = [
     ['name', 150, true],
     ['phoneMasked', 20, true],
@@ -129,6 +141,8 @@ async function main() {
   await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'labourers', 'dailyRate', false, 0, 100000, 0), 'attr: dailyRate')
   await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'labourers', 'jobsCompleted', false, 0, 100000, 0), 'attr: jobsCompleted')
   await ignoreExists(databases.createFloatAttribute(DATABASE_ID, 'labourers', 'rating', false, 0, 5, 0), 'attr: rating')
+  await ignoreExists(databases.createFloatAttribute(DATABASE_ID, 'labourers', 'lat', false, -90, 90), 'attr: lat')
+  await ignoreExists(databases.createFloatAttribute(DATABASE_ID, 'labourers', 'lng', false, -180, 180), 'attr: lng')
   await ignoreExists(databases.createBooleanAttribute(DATABASE_ID, 'labourers', 'featured', false, false), 'attr: featured')
   await ignoreExists(databases.createBooleanAttribute(DATABASE_ID, 'labourers', 'verified', false, false), 'attr: verified')
   await ignoreExists(databases.createDatetimeAttribute(DATABASE_ID, 'labourers', 'featuredUntil', false), 'attr: featuredUntil')
@@ -149,10 +163,21 @@ async function main() {
   console.log('\n📁 Collection: labourer_private')
   await ignoreExists(
     databases.createCollection(DATABASE_ID, 'labourer_private', 'labourer_private', [
+      Permission.read(Role.team(ADMIN_TEAM_ID)),
       Permission.create(Role.users()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.team(ADMIN_TEAM_ID)),
     ], true),
     'Create collection'
   )
+  try {
+    await databases.updateCollection(DATABASE_ID, 'labourer_private', 'labourer_private', [
+      Permission.read(Role.team(ADMIN_TEAM_ID)),
+      Permission.create(Role.users()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.team(ADMIN_TEAM_ID)),
+    ], true)
+  } catch {}
   await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'labourer_private', 'phone', 20, true), 'attr: phone')
   await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'labourer_private', 'address', 500, true), 'attr: address')
   await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'labourer_private', 'pincode', 10, false), 'attr: pincode')
@@ -161,10 +186,21 @@ async function main() {
   console.log('\n📁 Collection: bookings')
   await ignoreExists(
     databases.createCollection(DATABASE_ID, 'bookings', 'bookings', [
+      Permission.read(Role.team(ADMIN_TEAM_ID)),
       Permission.create(Role.users()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.team(ADMIN_TEAM_ID)),
     ], true),
     'Create collection'
   )
+  try {
+    await databases.updateCollection(DATABASE_ID, 'bookings', 'bookings', [
+      Permission.read(Role.team(ADMIN_TEAM_ID)),
+      Permission.create(Role.users()),
+      Permission.update(Role.team(ADMIN_TEAM_ID)),
+      Permission.delete(Role.team(ADMIN_TEAM_ID)),
+    ], true)
+  } catch {}
   await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'bookings', 'clientUserId', 100, true), 'attr: clientUserId')
   await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'bookings', 'labourerId', 100, true), 'attr: labourerId')
   await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'bookings', 'message', 1000, false), 'attr: message')
@@ -195,10 +231,8 @@ async function main() {
   await ignoreExists(databases.createIndex(DATABASE_ID, 'payments', 'user_idx', 'key', ['userId']), 'index: userId')
   await ignoreExists(databases.createIndex(DATABASE_ID, 'payments', 'related_idx', 'key', ['relatedId']), 'index: relatedId')
 
-  // ============================ settings (live, admin-editable pricing) ============================
-  // Singleton document, id "pricing". Admin -> Pricing edits this directly.
-  // Every fee starts at 0 so the platform launches fully free — you turn
-  // charges on later from the admin panel, no code change needed.
+  // ============================ settings (live, admin-editable config & pricing) ============================
+  // Singleton document, id "pricing". Admin -> Settings edits this directly.
   console.log('\n📁 Collection: settings')
   await ignoreExists(
     databases.createCollection(DATABASE_ID, 'settings', 'settings', [
@@ -213,6 +247,10 @@ async function main() {
   await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'featuredDays', false), 'attr: featuredDays')
   await ignoreExists(databases.createFloatAttribute(DATABASE_ID, 'settings', 'commissionPercent', false), 'attr: commissionPercent')
   await ignoreExists(databases.createIntegerAttribute(DATABASE_ID, 'settings', 'commissionMin', false), 'attr: commissionMin')
+  await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'settings', 'announcementText', 500, false), 'attr: announcementText')
+  await ignoreExists(databases.createBooleanAttribute(DATABASE_ID, 'settings', 'maintenanceMode', false, false), 'attr: maintenanceMode')
+  await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'settings', 'supportPhone', 50, false), 'attr: supportPhone')
+  await ignoreExists(databases.createStringAttribute(DATABASE_ID, 'settings', 'supportEmail', 100, false), 'attr: supportEmail')
   await waitForAttribute('settings', 'unlockFee')
   await waitForAttribute('settings', 'unlockValidDays')
   await waitForAttribute('settings', 'listingFee')
@@ -230,6 +268,10 @@ async function main() {
       featuredDays: 30,
       commissionPercent: 0,
       commissionMin: 0,
+      announcementText: '',
+      maintenanceMode: false,
+      supportPhone: '',
+      supportEmail: '',
     }, [Permission.read(Role.any()), Permission.update(Role.team(ADMIN_TEAM_ID))])
     console.log('  ✓ pricing document (all fees start at 0 / free)')
   }
@@ -264,11 +306,48 @@ async function main() {
     console.log(`  ✓ ${cat.name}`)
   }
 
-  console.log('\n✅ Done! Ab README.md ke "Next steps" section follow karein:')
-  console.log('   1. Apna user account banayein aap ke app se (signup)')
-  console.log(`   2. Us user ko Appwrite console me "${ADMIN_TEAM_ID}" team me add karein (make it Owner/confirmed)`)
-  console.log('   3. Teeno Appwrite Functions deploy karein (functions/ folder dekhen)')
-  console.log('   4. Login karke /admin/settings se apni pricing set karein — sab abhi 0 (free) par set hai\n')
+  // ============================ permissions migration ============================
+  console.log('\n🔐 Syncing permissions for existing documents...')
+  try {
+    const labourers = await databases.listDocuments(DATABASE_ID, 'labourers')
+    for (const doc of labourers.documents) {
+      await databases.updateDocument(DATABASE_ID, 'labourers', doc.$id, {}, [
+        Permission.read(Role.any()),
+        Permission.update(Role.user(doc.ownerUserId)),
+        Permission.update(Role.team(ADMIN_TEAM_ID)),
+        Permission.delete(Role.user(doc.ownerUserId)),
+        Permission.delete(Role.team(ADMIN_TEAM_ID)),
+      ])
+    }
+    console.log(`  ✓ Updated permissions for ${labourers.documents.length} labourers documents`)
+  } catch (err) {
+    console.log(`  · labourers permission migration skipped: ${err.message}`)
+  }
+
+  try {
+    const privates = await databases.listDocuments(DATABASE_ID, 'labourer_private')
+    for (const doc of privates.documents) {
+      const ownerId = doc.$permissions?.find((p) => p.startsWith('update("user:'))?.match(/user:([^"]+)/)?.[1] || ''
+      const permissions = [
+        Permission.read(Role.team(ADMIN_TEAM_ID)),
+        Permission.update(Role.team(ADMIN_TEAM_ID)),
+        Permission.delete(Role.team(ADMIN_TEAM_ID)),
+      ]
+      if (ownerId) {
+        permissions.push(Permission.read(Role.user(ownerId)))
+        permissions.push(Permission.update(Role.user(ownerId)))
+        permissions.push(Permission.delete(Role.user(ownerId)))
+      }
+      await databases.updateDocument(DATABASE_ID, 'labourer_private', doc.$id, {}, permissions)
+    }
+    console.log(`  ✓ Updated permissions for ${privates.documents.length} labourer_private documents`)
+  } catch (err) {
+    console.log(`  · labourer_private permission migration skipped: ${err.message}`)
+  }
+
+  console.log('\n✅ Done! Backend setup and permissions sync complete.')
+  console.log('   1. Setup complete: attributes, collections, & admin permissions synced.')
+  console.log('   2. Pricing settings initialized to 0 (free platform state).\n')
 }
 
 main().catch((err) => {

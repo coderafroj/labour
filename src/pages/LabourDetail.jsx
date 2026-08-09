@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapPin, Star, BadgeCheck, User, Lock, Phone, Home as HomeIcon, Loader2, Send, CheckCircle2 } from 'lucide-react'
-import { getLabourer, fetchUnlockedContact } from '../services/labourService'
+import { MapPin, Star, BadgeCheck, User, Lock, Phone, Home as HomeIcon, Loader2, Send, CheckCircle2, Navigation } from 'lucide-react'
+import { getLabourer, fetchUnlockedContact, calculateDistance } from '../services/labourService'
 import { startPayment } from '../services/paymentService'
 import { createBooking } from '../services/bookingService'
 import { useAuth } from '../hooks/useAuth'
@@ -20,6 +20,16 @@ export default function LabourDetail() {
   const [error, setError] = useState('')
   const [bookingSent, setBookingSent] = useState(false)
   const [message, setMessage] = useState('')
+  const [userCoords, setUserCoords] = useState(null)
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      )
+    }
+  }, [])
 
   useEffect(() => {
     (async () => {
@@ -76,6 +86,10 @@ export default function LabourDetail() {
   if (loading) return <Loader label="Profile load ho rahi hai..." />
   if (error && !labourer) return <div className="mx-auto max-w-2xl px-4 py-20 text-center text-steel">{error}</div>
 
+  const distance = userCoords && labourer?.lat != null && labourer?.lng != null
+    ? calculateDistance(userCoords.lat, userCoords.lng, labourer.lat, labourer.lng)
+    : null
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="badge-card overflow-hidden rounded-md">
@@ -100,6 +114,11 @@ export default function LabourDetail() {
             <p className="mt-1 text-sm font-semibold text-rust">{labourer.categoryName}</p>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-steel">
               <span className="flex items-center gap-1"><MapPin size={14} /> {labourer.city}</span>
+              {distance !== null && (
+                <span className="flex items-center gap-1 font-mono font-semibold text-rust">
+                  <Navigation size={13} /> {distance} km door
+                </span>
+              )}
               <span>{labourer.experienceYears}+ saal anubhav</span>
               {labourer.rating > 0 && (
                 <span className="flex items-center gap-1"><Star size={13} className="fill-signal text-signal" /> {labourer.rating.toFixed(1)} ({labourer.jobsCompleted} kaam)</span>
