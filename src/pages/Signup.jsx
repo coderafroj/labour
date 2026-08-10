@@ -35,8 +35,10 @@ export default function Signup() {
         description="Handiqo par free account banayein. Apne sheher ke verified kaamgaar dhundhein ya apni skilled worker profile register karein."
       />
 
-      <Link to="/" className="flex items-center gap-2.5 mb-2">
-        <img src="/handiqo_final_app_icon.svg" alt="Handiqo" className="h-12 w-12 object-contain" />
+      <Link to="/" className="flex items-center gap-2.5 mb-3">
+        <div className="p-2 bg-white rounded-2xl border-2 border-ink shadow-xs hover:scale-105 transition-all">
+          <img src="/handiqo_final_app_icon.svg" alt="Handiqo" className="h-14 w-14 object-contain" />
+        </div>
       </Link>
       <h1 className="mt-2 font-display text-3xl font-black text-ink">Free Account Banayein</h1>
       <p className="text-xs text-steel mt-1 font-semibold">Handiqo — Har Kaam Ka Sahi Haath</p>

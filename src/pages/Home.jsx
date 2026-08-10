@@ -114,10 +114,15 @@ export default function Home() {
           {/* Handiqo Brand Card & Visual */}
           <div className="relative hidden items-center justify-center md:flex">
             <div className="relative flex flex-col items-center">
-              <img src="/handiqo_final_dp_512.png" alt="Handiqo Badge" className="h-64 w-64 object-contain filter drop-shadow-xl animate-pulse" />
-              <div className="badge-card mt-4 rounded-md p-4 text-center max-w-xs border-2 border-ink">
-                <p className="font-display text-lg font-bold text-ink">Handiqo Verified</p>
-                <p className="text-xs text-steel mt-0.5">Aapke Sheher Ka Sabse Bharosemand Service Marketplace</p>
+              <div className="relative p-5 bg-white rounded-2xl border-2 border-ink shadow-md">
+                <img src="/handiqo_final_dp.svg" alt="Handiqo Official Emblem" className="h-64 w-64 object-contain filter drop-shadow-lg hover:scale-105 transition-transform duration-300" />
+              </div>
+              <div className="badge-card mt-5 rounded-md p-4 text-center max-w-xs border-2 border-ink bg-white shadow-xs">
+                <span className="badge-punch" />
+                <p className="font-display text-lg font-black text-ink flex items-center justify-center gap-1.5">
+                  <CheckCircle2 size={18} className="text-verified" /> Handiqo Verified
+                </p>
+                <p className="text-xs text-steel mt-0.5 font-semibold">Aapke Sheher Ka Sabse Bharosemand Service Marketplace</p>
               </div>
             </div>
           </div>
