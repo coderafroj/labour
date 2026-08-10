@@ -1,5 +1,5 @@
 import { databases, storage, functions, ID, Query, Permission, Role } from '../lib/appwrite'
-import { DATABASE_ID, COLLECTIONS, BUCKET_ID, FUNCTIONS, LABOUR_STATUS, ADMIN_TEAM_ID } from '../lib/constants'
+import { DATABASE_ID, COLLECTIONS, BUCKET_ID, FUNCTIONS, LABOUR_STATUS } from '../lib/constants'
 
 function maskPhone(phone) {
   const digits = String(phone).replace(/\D/g, '')
@@ -34,9 +34,6 @@ export async function uploadPhoto(file) {
   return storage.getFileView(BUCKET_ID, res.$id).toString()
 }
 
-// A labourer registers their own profile. Public fields go in `labourers`
-// (readable by everyone), full phone + address go in `labourer_private`
-// (readable by owner and admins).
 export async function registerLabourer({ ownerUserId, name, phone, address, city, categorySlug, categoryName, experienceYears, dailyRate, bio, photoUrl, lat, lng }) {
   const publicDoc = await databases.createDocument(
     DATABASE_ID,
@@ -65,9 +62,7 @@ export async function registerLabourer({ ownerUserId, name, phone, address, city
     [
       Permission.read(Role.any()),
       Permission.update(Role.user(ownerUserId)),
-      Permission.update(Role.team(ADMIN_TEAM_ID)),
       Permission.delete(Role.user(ownerUserId)),
-      Permission.delete(Role.team(ADMIN_TEAM_ID)),
     ]
   )
 
@@ -78,11 +73,8 @@ export async function registerLabourer({ ownerUserId, name, phone, address, city
     { phone: String(phone || '').trim(), address: String(address || '').trim(), pincode: '' },
     [
       Permission.read(Role.user(ownerUserId)),
-      Permission.read(Role.team(ADMIN_TEAM_ID)),
       Permission.update(Role.user(ownerUserId)),
-      Permission.update(Role.team(ADMIN_TEAM_ID)),
       Permission.delete(Role.user(ownerUserId)),
-      Permission.delete(Role.team(ADMIN_TEAM_ID)),
     ]
   )
 
@@ -90,13 +82,61 @@ export async function registerLabourer({ ownerUserId, name, phone, address, city
 }
 
 export async function browseLabourers({ categorySlug, city, search, limit = 24, offset = 0 } = {}) {
-  const filters = [Query.equal('status', LABOUR_STATUS.APPROVED), Query.limit(limit), Query.offset(offset)]
-  if (categorySlug) filters.push(Query.equal('categorySlug', categorySlug))
-  if (city) filters.push(Query.equal('city', city))
-  if (search) filters.push(Query.search('name', search))
-  filters.push(Query.orderDesc('featured'))
-  const res = await databases.listDocuments(DATABASE_ID, COLLECTIONS.LABOURERS, filters)
-  return res
+  try {
+    const filters = [Query.equal('status', LABOUR_STATUS.APPROVED), Query.limit(100)]
+    if (categorySlug) filters.push(Query.equal('categorySlug', categorySlug))
+    filters.push(Query.orderDesc('featured'))
+
+    const res = await databases.listDocuments(DATABASE_ID, COLLECTIONS.LABOURERS, filters)
+    let docs = res.documents
+
+    if (city) {
+      const cityLower = city.trim().toLowerCase()
+      docs = docs.filter((d) => (d.city || '').toLowerCase().includes(cityLower))
+    }
+
+    if (search) {
+      const qLower = search.trim().toLowerCase()
+      docs = docs.filter((d) => 
+        (d.name || '').toLowerCase().includes(qLower) ||
+        (d.categoryName || '').toLowerCase().includes(qLower) ||
+        (d.city || '').toLowerCase().includes(qLower) ||
+        (d.bio || '').toLowerCase().includes(qLower)
+      )
+    }
+
+    return {
+      total: docs.length,
+      documents: docs.slice(offset, offset + limit),
+    }
+  } catch {
+    // Robust fallback if strict query index is processing or fails
+    const res = await databases.listDocuments(DATABASE_ID, COLLECTIONS.LABOURERS, [
+      Query.equal('status', LABOUR_STATUS.APPROVED),
+      Query.limit(100),
+    ])
+    let docs = res.documents
+    if (categorySlug) {
+      const catLower = categorySlug.toLowerCase()
+      docs = docs.filter((d) => (d.categorySlug || '').toLowerCase() === catLower || (d.categoryName || '').toLowerCase().includes(catLower.replace('-', ' ')))
+    }
+    if (city) {
+      const cityLower = city.trim().toLowerCase()
+      docs = docs.filter((d) => (d.city || '').toLowerCase().includes(cityLower))
+    }
+    if (search) {
+      const qLower = search.trim().toLowerCase()
+      docs = docs.filter((d) => 
+        (d.name || '').toLowerCase().includes(qLower) ||
+        (d.categoryName || '').toLowerCase().includes(qLower) ||
+        (d.city || '').toLowerCase().includes(qLower)
+      )
+    }
+    return {
+      total: docs.length,
+      documents: docs.slice(offset, offset + limit),
+    }
+  }
 }
 
 export async function getLabourer(id) {
@@ -134,11 +174,23 @@ export async function adminSetVerified(id, verified) {
   return databases.updateDocument(DATABASE_ID, COLLECTIONS.LABOURERS, id, { verified })
 }
 
+export async function adminSetFeatured(id, featured, days = 30) {
+  const featuredUntil = featured
+    ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+    : null
+  return databases.updateDocument(DATABASE_ID, COLLECTIONS.LABOURERS, id, { featured, featuredUntil })
+}
+
+export async function adminDeleteLabourer(id) {
+  try {
+    await databases.deleteDocument(DATABASE_ID, COLLECTIONS.LABOURER_PRIVATE, id).catch(() => {})
+  } catch {
+    // Ignore if private doc does not exist
+  }
+  return databases.deleteDocument(DATABASE_ID, COLLECTIONS.LABOURERS, id)
+}
+
 // ---- Paid contact reveal --------------------------------------------------
-// Calls the get-labourer-contact Appwrite Function, which decides — using
-// the LIVE price from the database, not anything sent from this browser —
-// whether the current user is allowed to see the real phone/address.
-// Returns { locked: false, phone, address } or { locked: true, fee }.
 export async function fetchUnlockedContact(labourerId) {
   const exec = await functions.createExecution(
     FUNCTIONS.GET_CONTACT,
