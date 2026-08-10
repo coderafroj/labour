@@ -5,6 +5,7 @@ import { listCategories } from '../services/categoryService'
 import { browseLabourers, calculateDistance } from '../services/labourService'
 import LabourCard from '../components/LabourCard'
 import Loader from '../components/Loader'
+import SEO from '../components/SEO'
 
 const PAGE_SIZE = 12
 
@@ -91,60 +92,68 @@ export default function BrowseLabour() {
 
   const categoryIconFor = (slug) => categories.find((c) => c.slug === slug)?.icon || 'HardHat'
 
+  const currentCategoryName = categories.find((c) => c.slug === categorySlug)?.name || 'Sabhi Category'
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <SEO
+        title={`Verified ${currentCategoryName} ${city ? `in ${city}` : ''} | Handiqo`}
+        description={`Handiqo par verified ${currentCategoryName} ${city ? `sheher ${city}` : ''} mein khojein. Rating, daily rate aur direct contact info.`}
+        keywords={`Handiqo, ${currentCategoryName}, ${city}, local labour, mistri, electrician, plumber`}
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-bold text-ink">Kaam Wale Dhundo</h1>
-          <p className="mt-1 text-sm text-steel">{total} verified kaamgaar milte hain LabourConnect par</p>
+          <h1 className="font-display text-4xl font-black text-ink">Kaam Wale Dhundo</h1>
+          <p className="mt-1 text-sm font-semibold text-steel">Handiqo par {total} verified kaamgaar uplabdh hain</p>
         </div>
         <button
           onClick={handleToggleNearMe}
           disabled={gettingLoc}
-          className={`flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold transition-colors ${
+          className={`flex items-center gap-2 rounded px-4 py-2.5 text-sm font-bold transition-all shadow-xs ${
             nearMeActive ? 'bg-rust text-paper' : 'border border-paper-line bg-paper text-ink hover:border-ink'
           }`}
         >
           {gettingLoc ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
-          {nearMeActive ? '📍 Near Me Active (Pass Wale Top Pe)' : '📍 Pass Ke Kaamgaar (Near Me)'}
+          {nearMeActive ? '📍 Near Me Active (Pass Wale Pehle)' : '📍 Pass Ke Kaamgaar (Near Me)'}
         </button>
       </div>
 
       {locError && <p className="mt-2 text-xs text-danger">{locError}</p>}
 
-      <div className="badge-card mt-6 flex flex-col gap-3 rounded-md p-4 sm:flex-row">
+      <div className="badge-card mt-6 flex flex-col gap-3 rounded-md p-4 sm:flex-row shadow-sm">
         <select
           value={categorySlug}
           onChange={(e) => updateParam('category', e.target.value)}
-          className="rounded border border-paper-line bg-white px-3 py-2 text-sm outline-none focus:border-indigo sm:w-56"
+          className="rounded border border-paper-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-indigo sm:w-56 font-medium"
         >
-          <option value="">Sab Category</option>
+          <option value="">Sabhi Category</option>
           {categories.map((c) => <option key={c.$id} value={c.slug}>{c.name}</option>)}
         </select>
         <input
           defaultValue={city}
           onBlur={(e) => updateParam('city', e.target.value)}
-          placeholder="Sheher"
-          className="rounded border border-paper-line bg-white px-3 py-2 text-sm outline-none focus:border-indigo sm:w-48"
+          placeholder="Sheher ka naam"
+          className="rounded border border-paper-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-indigo sm:w-48 font-medium"
         />
         <div className="relative flex-1">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-steel" />
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-steel" />
           <input
             defaultValue={search}
             onBlur={(e) => updateParam('q', e.target.value)}
-            placeholder="Naam se search karo"
-            className="w-full rounded border border-paper-line bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-indigo"
+            placeholder="Naam se search karein"
+            className="w-full rounded border border-paper-line bg-white py-2.5 pl-10 pr-3.5 text-sm text-ink outline-none focus:border-indigo font-medium"
           />
         </div>
       </div>
 
       {loading && labourers.length === 0 ? (
-        <Loader label="Kaamgaar dhundhe ja rahe hain..." />
+        <Loader label="Handiqo verified kaamgaar khoje ja rahe hain..." />
       ) : labourers.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-3 text-center text-steel">
-          <SearchX size={36} />
-          <p className="font-display text-xl font-semibold text-ink">Koi kaamgaar nahi mila</p>
-          <p className="text-sm">Category ya sheher badal kar dobara try karo.</p>
+          <SearchX size={40} className="text-steel/60" />
+          <h2 className="font-display text-2xl font-bold text-ink">Koi kaamgaar nahi mila</h2>
+          <p className="text-sm max-w-sm">Aap selected category ya sheher badal kar dobara search karein.</p>
         </div>
       ) : (
         <>
@@ -154,11 +163,11 @@ export default function BrowseLabour() {
             ))}
           </div>
           {labourers.length < total && (
-            <div className="mt-8 text-center">
+            <div className="mt-10 text-center">
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="rounded border border-ink px-6 py-2.5 text-sm font-semibold text-ink hover:bg-ink hover:text-paper disabled:opacity-50"
+                className="rounded border-2 border-ink px-8 py-3 text-sm font-bold text-ink hover:bg-ink hover:text-paper transition-all disabled:opacity-50"
               >
                 {loading ? 'Load ho raha hai...' : 'Aur Dikhao'}
               </button>
@@ -166,6 +175,6 @@ export default function BrowseLabour() {
           )}
         </>
       )}
-    </div>
+    </main>
   )
 }

@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, ShieldCheck, PhoneCall, ArrowRight, User } from 'lucide-react'
+import { Search, ShieldCheck, PhoneCall, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { listCategories } from '../services/categoryService'
 import { browseLabourers } from '../services/labourService'
 import { getSettings } from '../services/settingsService'
 import CategoryIcon from '../components/CategoryIcon'
 import LabourCard from '../components/LabourCard'
 import Loader from '../components/Loader'
+import SEO from '../components/SEO'
 
 const STEPS = [
-  { n: '01', title: 'Category aur sheher chuno', desc: 'Mistri, electrician, plumber — jo bhi kaam chahiye, search karo.', icon: Search },
-  { n: '02', title: 'Verified profile dekho', desc: 'Rating, anubhav, rate — sab pehle se saaf-saaf likha hoga.', icon: ShieldCheck },
-  { n: '03', title: '₹19 mein number unlock karo', desc: 'Ek chhota sa charge, aur seedha unka mobile number mil jaata hai.', icon: PhoneCall },
+  { n: '01', title: 'Category & Sheher Chuno', desc: 'Mistri, electrician, plumber, painter — jo bhi kaam chahiye, category ya sheher se khojein.', icon: Search },
+  { n: '02', title: 'Verified Profile Dekho', desc: 'Kaamgaar ka rating, anubhav, daily rate aur verified badge saaf-saaf dekhein.', icon: ShieldCheck },
+  { n: '03', title: 'Seedha Contact Karo', desc: 'Bina kisi bichauliye ke seedha kaamgaar ke phone number par call karke kaam karwayein.', icon: PhoneCall },
 ]
 
 export default function Home() {
@@ -48,30 +49,49 @@ export default function Home() {
     navigate(`/browse?${params.toString()}`)
   }
 
+  const schemaData = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Handiqo',
+    url: 'https://labour-seven.vercel.app/',
+    logo: 'https://labour-seven.vercel.app/handiqo_final_app_icon_512.png',
+    description: 'Handiqo — Aapke sheher ke verified kaamgaar. Skilled hands, trusted work near you.',
+    slogan: 'Har Kaam Ka Sahi Haath',
+  }
+
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-paper-line">
+    <main>
+      <SEO
+        title="Har Kaam Ka Sahi Haath | Verified Local Kaamgaar"
+        description="Handiqo — Apne sheher ke verified kaamgaar (Mistri, Electrician, Plumber, Painter, Driver, aadi) dhundhein. Skilled hands, trusted work near you."
+        keywords="Handiqo, handiqo app, mistri, electrician, plumber, painter, driver, local labour marketplace, skilled workers India"
+        schema={schemaData}
+      />
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden border-b border-paper-line bg-gradient-to-b from-paper to-white">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 md:py-20">
           <div className="flex flex-col justify-center">
-            <span className="w-fit rounded-sm bg-ink px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-widest text-signal">
-              10 shehron mein live
-            </span>
-            <h1 className="mt-4 font-display text-5xl font-bold leading-[0.95] text-ink sm:text-6xl">
-              Har kaam ke liye,<br /> <span className="text-rust">sahi haath.</span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-widest text-signal">
+                <CheckCircle2 size={13} className="text-signal" /> Handiqo Verified Platform
+              </span>
+            </div>
+            <h1 className="mt-4 font-display text-4xl font-black leading-[1.02] text-ink sm:text-6xl">
+              Har Kaam Ka<br /> <span className="text-rust">Sahi Haath.</span>
             </h1>
-            <p className="mt-4 max-w-md text-base text-steel">
-              Mistri, electrician, plumber, painter — apne mohalle ke verified kaamgaar dhundo,
-              seedha unka number lo, bina kisi bichauliye ke.
+            <p className="mt-4 max-w-md text-base leading-relaxed text-steel">
+              Apne sheher ke verified mistri, electrician, plumber, painter aur drivers dhundhein. Seedha contact karein — zero bichauliya, 100% bharosa!
             </p>
 
-            <form onSubmit={handleSearch} className="badge-card mt-7 flex flex-col gap-2 rounded-md p-3 sm:flex-row">
+            {/* Search Box */}
+            <form onSubmit={handleSearch} className="badge-card mt-7 flex flex-col gap-2 rounded-md p-3 sm:flex-row shadow-sm">
               <select
                 value={categorySlug}
                 onChange={(e) => setCategorySlug(e.target.value)}
-                className="flex-1 rounded border border-paper-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-indigo"
+                className="flex-1 rounded border border-paper-line bg-white px-3.5 py-3 text-sm text-ink outline-none focus:border-indigo"
               >
-                <option value="">Koi bhi category</option>
+                <option value="">Sabhi Categories</option>
                 {categories.map((c) => (
                   <option key={c.$id} value={c.slug}>{c.name}</option>
                 ))}
@@ -79,44 +99,26 @@ export default function Home() {
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Sheher ka naam"
-                className="flex-1 rounded border border-paper-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-indigo"
+                placeholder="Sheher ka naam (e.g. Bareilly, Delhi)"
+                className="flex-1 rounded border border-paper-line bg-white px-3.5 py-3 text-sm text-ink outline-none focus:border-indigo"
               />
-              <button type="submit" className="flex items-center justify-center gap-1.5 rounded bg-signal px-5 py-2.5 text-sm font-semibold text-ink hover:bg-signal-deep">
+              <button type="submit" className="flex items-center justify-center gap-2 rounded bg-signal px-6 py-3 text-sm font-bold text-ink hover:bg-signal-deep transition-all">
                 <Search size={16} /> Dhundo
               </button>
             </form>
             <p className="mt-3 font-mono text-xs text-steel">
-              {settings && settings.unlockFee > 0 ? `Free hai — sirf number dekhne ka ₹${settings.unlockFee} lagta hai.` : 'Abhi bilkul free hai — number dekhne ka bhi koi charge nahi.'}
+              {settings && settings.unlockFee > 0 ? `Free search — sirf phone number dekhne ka ₹${settings.unlockFee} lagta hai.` : '✨ Abhi Handiqo par sab kuch 100% Free hai!'}
             </p>
           </div>
 
-          {/* Fanned ID badge stack */}
+          {/* Handiqo Brand Card & Visual */}
           <div className="relative hidden items-center justify-center md:flex">
-            <div className="relative h-80 w-64">
-              {[{ rot: -8, top: 30, name: 'Ramesh Yadav', role: 'Electrician', z: 1 },
-                { rot: 4, top: 10, name: 'Suresh Kumar', role: 'Mistri', z: 2 },
-                { rot: -2, top: 0, name: 'Anita Devi', role: 'House Help', z: 3 }].map((c) => (
-                <div
-                  key={c.name}
-                  style={{ transform: `rotate(${c.rot}deg)`, top: c.top, zIndex: c.z }}
-                  className="badge-card absolute left-0 w-64 rounded-md p-4"
-                >
-                  <span className="badge-punch" />
-                  <div className="mb-3 flex items-center gap-3 pt-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink bg-paper">
-                      <User size={22} className="text-steel" />
-                    </div>
-                    <div>
-                      <p className="font-display text-lg font-semibold text-ink">{c.name}</p>
-                      <p className="text-xs font-medium text-rust">{c.role}</p>
-                    </div>
-                  </div>
-                  <div className="stamp mx-auto w-fit rounded-full px-3 py-1 font-mono text-[10px] font-bold uppercase">
-                    Verified
-                  </div>
-                </div>
-              ))}
+            <div className="relative flex flex-col items-center">
+              <img src="/handiqo_final_dp_512.png" alt="Handiqo Badge" className="h-64 w-64 object-contain filter drop-shadow-xl animate-pulse" />
+              <div className="badge-card mt-4 rounded-md p-4 text-center max-w-xs border-2 border-ink">
+                <p className="font-display text-lg font-bold text-ink">Handiqo Verified</p>
+                <p className="text-xs text-steel mt-0.5">Aapke Sheher Ka Sabse Bharosemand Service Marketplace</p>
+              </div>
             </div>
           </div>
         </div>
@@ -125,9 +127,12 @@ export default function Home() {
       {/* Categories */}
       <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-display text-3xl font-bold text-ink">Category Se Dhundo</h2>
-          <Link to="/browse" className="flex items-center gap-1 text-sm font-medium text-indigo hover:underline">
-            Sab dekho <ArrowRight size={14} />
+          <div>
+            <h2 className="font-display text-3xl font-bold text-ink">Category Se Khojein</h2>
+            <p className="text-xs text-steel mt-0.5">Jis kaam ki zarurat ho, wahi category chuno</p>
+          </div>
+          <Link to="/browse" className="flex items-center gap-1 text-sm font-semibold text-indigo hover:underline">
+            Sabhi Categories <ArrowRight size={14} />
           </Link>
         </div>
         {loading ? <Loader /> : (
@@ -136,29 +141,32 @@ export default function Home() {
               <Link
                 key={c.$id}
                 to={`/browse?category=${c.slug}`}
-                className="group flex flex-col items-center gap-2 rounded-md border border-paper-line bg-white px-3 py-5 text-center transition-colors hover:border-ink"
+                className="group flex flex-col items-center gap-2 rounded-md border border-paper-line bg-white px-3 py-5 text-center transition-all hover:border-ink hover:shadow-md"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-paper text-indigo group-hover:bg-signal group-hover:text-ink">
-                  <CategoryIcon name={c.icon} size={20} />
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-paper text-indigo group-hover:bg-signal group-hover:text-ink transition-colors">
+                  <CategoryIcon name={c.icon} size={22} />
                 </span>
-                <span className="text-sm font-medium text-ink">{c.name}</span>
+                <span className="text-sm font-semibold text-ink">{c.name}</span>
               </Link>
             ))}
           </div>
         )}
       </section>
 
-      {/* How it works — a real 3-step sequence, numbering earns its place */}
-      <section className="border-y border-paper-line bg-indigo text-paper">
+      {/* How it works */}
+      <section className="border-y border-paper-line bg-ink text-paper">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="font-display text-3xl font-bold">3 Step Mein Kaam Ho Jayega</h2>
-          <div className="mt-9 grid gap-8 md:grid-cols-3">
+          <div className="text-center md:text-left">
+            <span className="text-xs font-mono font-bold tracking-widest text-signal uppercase">Handiqo Process</span>
+            <h2 className="font-display text-3xl font-bold mt-1">Handiqo Par Kaam Kaise Hota Hai?</h2>
+          </div>
+          <div className="mt-10 grid gap-8 md:grid-cols-3">
             {STEPS.map((s) => (
-              <div key={s.n} className="relative border-t border-paper/20 pt-5">
-                <span className="font-mono text-sm text-signal">{s.n}</span>
-                <s.icon size={26} className="my-3 text-signal" />
-                <p className="font-display text-xl font-semibold">{s.title}</p>
-                <p className="mt-1.5 text-sm text-paper/70">{s.desc}</p>
+              <div key={s.n} className="relative border-t border-paper/20 pt-6">
+                <span className="font-mono text-sm font-bold text-signal">{s.n}</span>
+                <s.icon size={28} className="my-3 text-signal" />
+                <h3 className="font-display text-xl font-bold">{s.title}</h3>
+                <p className="mt-2 text-sm text-paper/70 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -169,9 +177,12 @@ export default function Home() {
       {featured.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
           <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-display text-3xl font-bold text-ink">Featured Kaamgaar</h2>
-            <Link to="/browse" className="flex items-center gap-1 text-sm font-medium text-indigo hover:underline">
-              Sab dekho <ArrowRight size={14} />
+            <div>
+              <h2 className="font-display text-3xl font-bold text-ink">Handiqo Featured Kaamgaar</h2>
+              <p className="text-xs text-steel mt-0.5">Top rated aur verified mistri & skilled workers</p>
+            </div>
+            <Link to="/browse" className="flex items-center gap-1 text-sm font-semibold text-indigo hover:underline">
+              Sabhi Dekho <ArrowRight size={14} />
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -182,16 +193,17 @@ export default function Home() {
 
       {/* Become a labourer CTA */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <div className="flex flex-col items-start gap-4 rounded-md border border-paper-line bg-white p-8 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col items-start gap-4 rounded-md border-2 border-ink bg-white p-8 md:flex-row md:items-center md:justify-between shadow-sm">
           <div>
-            <p className="font-display text-2xl font-bold text-ink">Aap kaam karte ho? Apna naam register karo — free hai.</p>
-            <p className="mt-1 text-sm text-steel">Zyada clients tak pahuncho, apni profile featured karke aage dikho.</p>
+            <span className="text-xs font-mono font-bold tracking-widest text-rust uppercase">For Skilled Workers</span>
+            <h2 className="font-display text-2xl font-bold text-ink mt-0.5">Aap kaam karte hain? Handiqo par free profile banayein.</h2>
+            <p className="mt-1 text-sm text-steel">Zyada local clients tak pahunchein aur apne sheher mein direct kaam paayein.</p>
           </div>
-          <Link to="/register-labour" className="shrink-0 rounded bg-ink px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-deep">
-            Free Mein Register Karo
+          <Link to="/register-labour" className="shrink-0 rounded bg-ink px-6 py-3 text-sm font-bold text-paper hover:bg-indigo-deep transition-all">
+            Free Mein Profile Register Karo
           </Link>
         </div>
       </section>
-    </div>
+    </main>
   )
 }

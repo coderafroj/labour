@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Loader2, HardHat } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import SEO from '../components/SEO'
 
 export default function Signup() {
   const { signup, loginWithGoogle } = useAuth()
@@ -19,7 +20,7 @@ export default function Signup() {
     setError('')
     try {
       await signup(name, email, password)
-      navigate(location.state?.from || '/')
+      navigate(location.state?.from || '/dashboard')
     } catch (err) {
       setError(err.message || 'Signup nahi ho paya, dobara try karein')
     } finally {
@@ -28,17 +29,25 @@ export default function Signup() {
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16 sm:px-6">
-      <span className="flex h-12 w-12 items-center justify-center rounded bg-ink text-signal"><HardHat size={24} /></span>
-      <h1 className="mt-3 font-display text-3xl font-bold text-ink">Free Account Banayein</h1>
+    <main className="mx-auto flex max-w-md flex-col items-center px-4 py-16 sm:px-6">
+      <SEO
+        title="Free Signup | Handiqo"
+        description="Handiqo par free account banayein. Apne sheher ke verified kaamgaar dhundhein ya apni skilled worker profile register karein."
+      />
 
-      <div className="badge-card mt-6 w-full space-y-4 rounded-md p-6">
+      <Link to="/" className="flex items-center gap-2.5 mb-2">
+        <img src="/handiqo_final_app_icon.svg" alt="Handiqo" className="h-12 w-12 object-contain" />
+      </Link>
+      <h1 className="mt-2 font-display text-3xl font-black text-ink">Free Account Banayein</h1>
+      <p className="text-xs text-steel mt-1 font-semibold">Handiqo — Har Kaam Ka Sahi Haath</p>
+
+      <div className="badge-card mt-6 w-full space-y-4 rounded-md p-6 shadow-sm border-2 border-ink">
         <span className="badge-punch" />
 
         <button
           type="button"
           onClick={loginWithGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded border border-paper-line bg-white py-3 text-sm font-semibold text-ink shadow-xs hover:bg-paper"
+          className="flex w-full items-center justify-center gap-3 rounded border-2 border-paper-line bg-white py-3 text-sm font-bold text-ink shadow-xs hover:bg-paper transition-all"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -51,24 +60,37 @@ export default function Signup() {
 
         <div className="relative flex items-center justify-center">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-paper-line" /></div>
-          <span className="relative bg-white px-2 text-xs uppercase tracking-wider text-steel">Ya Email Se Form Bharo</span>
+          <span className="relative bg-white px-3 text-xs uppercase tracking-wider font-bold text-steel">Ya Email Se Form Bharo</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Pura Naam" className="input" />
-          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="input" />
-          <input required type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 8 characters)" className="input" />
-          {error && <p className="text-sm text-danger">{error}</p>}
-          <button disabled={loading} className="flex w-full items-center justify-center gap-2 rounded bg-signal py-3 text-sm font-semibold text-ink hover:bg-signal-deep disabled:opacity-60">
-            {loading && <Loader2 size={16} className="animate-spin" />} Account Banayein
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-steel mb-1">Pura Naam</label>
+            <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Apna naam daalo" className="input" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-steel mb-1">Email Address</label>
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" className="input" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-steel mb-1">Password</label>
+            <input required type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Atleast 8 characters" className="input" />
+          </div>
+
+          {error && <p className="text-sm font-semibold text-danger">{error}</p>}
+
+          <button disabled={loading} className="flex w-full items-center justify-center gap-2 rounded bg-signal py-3 text-sm font-bold text-ink hover:bg-signal-deep transition-all disabled:opacity-60">
+            {loading && <Loader2 size={16} className="animate-spin" />} Free Account Banayein
           </button>
         </form>
       </div>
-      <p className="mt-4 text-sm text-steel">
-        Pehle se account hai? <Link to="/login" className="font-semibold text-indigo underline">Login karo</Link>
+
+      <p className="mt-4 text-sm text-steel font-medium">
+        Pehle se Handiqo account hai? <Link to="/login" className="font-bold text-indigo underline">Login karo</Link>
       </p>
-      <style>{`.input { width: 100%; border: 1px solid var(--color-paper-line); border-radius: 4px; padding: 0.7rem 0.9rem; font-size: 0.875rem; outline: none; }
+
+      <style>{`.input { width: 100%; border: 1px solid var(--color-paper-line); border-radius: 4px; padding: 0.7rem 0.9rem; font-size: 0.875rem; outline: none; font-weight: 500; }
       .input:focus { border-color: var(--color-indigo); }`}</style>
-    </div>
+    </main>
   )
 }

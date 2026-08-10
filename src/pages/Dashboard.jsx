@@ -8,6 +8,7 @@ import { myPayments, startPayment } from '../services/paymentService'
 import { getSettings } from '../services/settingsService'
 import { BOOKING_STATUS, LABOUR_STATUS } from '../lib/constants'
 import Loader from '../components/Loader'
+import SEO from '../components/SEO'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -19,13 +20,14 @@ export default function Dashboard() {
     getMyLabourerProfile(user.$id).then(setLabourer).finally(() => setLoading(false))
   }, [user])
 
-  if (loading) return <Loader />
+  if (loading) return <Loader label="Handiqo dashboard load ho raha hai..." />
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <h1 className="font-display text-4xl font-bold text-ink">Mera Dashboard</h1>
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+      <SEO title="Mera Dashboard | Handiqo" description="Handiqo user aur kaamgaar dashboard." />
+      <h1 className="font-display text-4xl font-black text-ink">Handiqo Dashboard</h1>
       {labourer ? <LabourerDashboard labourer={labourer} setLabourer={setLabourer} user={user} /> : <ClientDashboard user={user} />}
-    </div>
+    </main>
   )
 }
 
