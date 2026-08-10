@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /dashboard
 
-Sitemap: https://labour-seven.vercel.app/sitemap.xml
+Sitemap: https://handiqo.vercel.app/sitemap.xml

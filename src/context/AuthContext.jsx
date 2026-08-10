@@ -16,19 +16,28 @@ export function AuthProvider({ children }) {
       const secret = urlParams.get('secret')
       const userId = urlParams.get('userId')
 
+      let isOauth = false
       if (secret && userId) {
+        isOauth = true
         try {
           // Create session locally using the OAuth secret and userId
           await account.createSession(userId, secret)
-          // Clean secret and userId from address bar for security & cleanliness
-          const cleanUrl = window.location.origin + window.location.pathname
-          window.history.replaceState({}, document.title, cleanUrl)
         } catch {
           // If session creation fails or session already exists, proceed to get()
         }
+        // Clean secret and userId from address bar for security & cleanliness
+        const cleanUrl = window.location.origin + window.location.pathname
+        window.history.replaceState({}, document.title, cleanUrl)
       }
 
-      const me = await account.get().catch(() => null)
+      let me = await account.get().catch(() => null)
+
+      // Retry fallback for OAuth redirect session sync across domains
+      if (!me && isOauth) {
+        await new Promise((r) => setTimeout(r, 300))
+        me = await account.get().catch(() => null)
+      }
+
       if (!me) {
         setUser(null)
         setIsAdmin(false)
