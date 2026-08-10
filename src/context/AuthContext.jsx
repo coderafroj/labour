@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { account, teams, ID } from '../lib/appwrite'
+import { account, teams, ID, client } from '../lib/appwrite'
 import { ADMIN_TEAM_ID } from '../lib/constants'
 import { AuthContext } from './auth-context'
 
@@ -16,28 +16,30 @@ export function AuthProvider({ children }) {
       const secret = urlParams.get('secret')
       const userId = urlParams.get('userId')
 
-      let isOauth = false
       if (secret && userId) {
-        isOauth = true
         try {
-          // Create session locally using the OAuth secret and userId
-          await account.createSession(userId, secret)
+          // Exchange OAuth secret and userId for an explicit session
+          const sess = await account.createSession(userId, secret)
+          const token = sess?.secret || secret
+          client.setSession(token)
+          localStorage.setItem('appwrite_session', token)
         } catch {
-          // If session creation fails or session already exists, proceed to get()
+          // Fallback if session creation was handled on server callback
+          client.setSession(secret)
+          localStorage.setItem('appwrite_session', secret)
         }
         // Clean secret and userId from address bar for security & cleanliness
         const cleanUrl = window.location.origin + window.location.pathname
         window.history.replaceState({}, document.title, cleanUrl)
       }
 
-      let me = await account.get().catch(() => null)
-
-      // Retry fallback for OAuth redirect session sync across domains
-      if (!me && isOauth) {
-        await new Promise((r) => setTimeout(r, 300))
-        me = await account.get().catch(() => null)
+      // Load session from localStorage if present
+      const savedSession = localStorage.getItem('appwrite_session')
+      if (savedSession) {
+        client.setSession(savedSession)
       }
 
+      const me = await account.get().catch(() => null)
       if (!me) {
         setUser(null)
         setIsAdmin(false)
@@ -91,6 +93,8 @@ export function AuthProvider({ children }) {
     } catch {
       // Ignore if session is already deleted
     }
+    localStorage.removeItem('appwrite_session')
+    client.setSession('')
     setUser(null)
     setIsAdmin(false)
   }
