@@ -47,7 +47,7 @@ export default function Login() {
 
         <button
           type="button"
-          onClick={loginWithGoogle}
+          onClick={() => loginWithGoogle(location.state?.from || '/dashboard')}
           className="flex w-full items-center justify-center gap-3 rounded border-2 border-paper-line bg-white py-3 text-sm font-bold text-ink shadow-xs hover:bg-paper transition-all"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

@@ -11,6 +11,23 @@ export function AuthProvider({ children }) {
   const refresh = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true)
     try {
+      // Check if returning from Google OAuth redirect with secret & userId in URL query params
+      const urlParams = new URLSearchParams(window.location.search)
+      const secret = urlParams.get('secret')
+      const userId = urlParams.get('userId')
+
+      if (secret && userId) {
+        try {
+          // Create session locally using the OAuth secret and userId
+          await account.createSession(userId, secret)
+          // Clean secret and userId from address bar for security & cleanliness
+          const cleanUrl = window.location.origin + window.location.pathname
+          window.history.replaceState({}, document.title, cleanUrl)
+        } catch {
+          // If session creation fails or session already exists, proceed to get()
+        }
+      }
+
       const me = await account.get().catch(() => null)
       if (!me) {
         setUser(null)
@@ -46,10 +63,10 @@ export function AuthProvider({ children }) {
     await refresh()
   }
 
-  const loginWithGoogle = () => {
+  const loginWithGoogle = (redirectPath = '/dashboard') => {
     account.createOAuth2Session(
       'google',
-      `${window.location.origin}/dashboard`,
+      `${window.location.origin}${redirectPath}`,
       `${window.location.origin}/login`
     )
   }
