@@ -53,18 +53,19 @@ export default function Home() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Handiqo',
-    url: 'https://labour-seven.vercel.app/',
-    logo: 'https://labour-seven.vercel.app/handiqo_final_app_icon_512.png',
-    description: 'Handiqo — Aapke sheher ke verified kaamgaar. Skilled hands, trusted work near you.',
+    alternateName: ['Handiqo App', 'Handiqo Labour', 'Handiqo Marketplace'],
+    url: 'https://handiqo.vercel.app/',
+    logo: 'https://handiqo.vercel.app/handiqo_final_app_icon_512.png',
+    description: 'Handiqo — Apne sheher ke verified kaamgaar (Mistri, Electrician, Plumber, Painter, Driver, House Help) ek click mein dhundhein. Direct contact, 0% commission, 100% verified local workers.',
     slogan: 'Har Kaam Ka Sahi Haath',
   }
 
   return (
     <main>
       <SEO
-        title="Har Kaam Ka Sahi Haath | Verified Local Kaamgaar"
-        description="Handiqo — Apne sheher ke verified kaamgaar (Mistri, Electrician, Plumber, Painter, Driver, aadi) dhundhein. Skilled hands, trusted work near you."
-        keywords="Handiqo, handiqo app, mistri, electrician, plumber, painter, driver, local labour marketplace, skilled workers India"
+        title="Har Kaam Ka Sahi Haath | Verified Local Kaamgaar Marketplace"
+        description="Handiqo par apne sheher ke verified mistri, electrician, plumber, painter, driver, aur house help dhundhein. Seedha call karein — zero bichauliya, 100% bharosa!"
+        keywords="Handiqo, Handiqo App, Handiqo Labour, mistri near me, electrician near me, plumber near me, painter near me, driver near me, house help near me, local labour booking app, daily wage worker India"
         schema={schemaData}
       />
 

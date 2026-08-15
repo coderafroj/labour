@@ -100,20 +100,27 @@ export default function LabourDetail() {
     '@type': 'Person',
     name: labourer.name,
     jobTitle: labourer.categoryName,
+    worksFor: {
+      '@type': 'Organization',
+      name: 'Handiqo',
+      url: 'https://handiqo.vercel.app/'
+    },
     address: {
       '@type': 'PostalAddress',
       addressLocality: labourer.city,
+      addressCountry: 'IN'
     },
-    image: labourer.photoUrl || undefined,
+    image: labourer.photoUrl || 'https://handiqo.vercel.app/handiqo_final_dp_512.png',
+    description: `${labourer.name} is a verified ${labourer.categoryName} on Handiqo in ${labourer.city}. Experience: ${labourer.experienceYears} years. Daily Rate: ₹${labourer.dailyRate}/day.`
   } : null
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       {labourer && (
         <SEO
-          title={`${labourer.name} — ${labourer.categoryName} in ${labourer.city} | Handiqo`}
-          description={`${labourer.name} (${labourer.categoryName}) — Handiqo Verified. ${labourer.experienceYears}+ saal anubhav, Rate: ₹${labourer.dailyRate}/din. Contact info and booking.`}
-          keywords={`Handiqo, ${labourer.name}, ${labourer.categoryName}, ${labourer.city}`}
+          title={`${labourer.name} (${labourer.categoryName}) in ${labourer.city} | Handiqo Profile`}
+          description={`${labourer.name} — Verified ${labourer.categoryName} in ${labourer.city}. Anubhav: ${labourer.experienceYears}+ saal, Rate: ₹${labourer.dailyRate}/din. Contact number unlock karein.`}
+          keywords={`Handiqo, ${labourer.name}, Handiqo ${labourer.name}, ${labourer.categoryName} in ${labourer.city}, ${labourer.city} ${labourer.categoryName} number, verified ${labourer.categoryName}`}
           image={labourer.photoUrl}
           schema={schemaData}
         />

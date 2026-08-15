@@ -92,14 +92,26 @@ export default function BrowseLabour() {
 
   const categoryIconFor = (slug) => categories.find((c) => c.slug === slug)?.icon || 'HardHat'
 
-  const currentCategoryName = categories.find((c) => c.slug === categorySlug)?.name || 'Sabhi Category'
+  const categorySchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Verified ${currentCategoryName} ${city ? `in ${city}` : ''} — Handiqo`,
+    numberOfItems: total,
+    itemListElement: labourers.map((l, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: l.name,
+      url: `https://handiqo.vercel.app/labour/${l.$id}`
+    }))
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <SEO
-        title={`Verified ${currentCategoryName} ${city ? `in ${city}` : ''} | Handiqo`}
-        description={`Handiqo par verified ${currentCategoryName} ${city ? `sheher ${city}` : ''} mein khojein. Rating, daily rate aur direct contact info.`}
-        keywords={`Handiqo, ${currentCategoryName}, ${city}, local labour, mistri, electrician, plumber`}
+        title={`Verified ${currentCategoryName} ${city ? `in ${city}` : ''} | Handiqo Labour`}
+        description={`Handiqo par verified ${currentCategoryName} ${city ? `sheher ${city}` : ''} mein khojein. Rating, daily rate, anubhav aur direct phone number.`}
+        keywords={`Handiqo, Handiqo ${currentCategoryName}, ${currentCategoryName} near me, ${currentCategoryName} in ${city || 'Bareilly'}, ${city || 'Bareilly'} mistri labour, verified ${currentCategoryName}`}
+        schema={categorySchema}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
